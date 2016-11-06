@@ -65,24 +65,13 @@ ull Memory::romemoryRead(ull src, int size)
 	return *((ull *)tmp);
 }
 
-void Memory::romemoryWrite(ull content, ull src, int size, bool elf)
+void Memory::loadROMem(ull dest, ull src, ull size)
 {
-	if(!elf)
-	{
-		cout << "Memory: You can't write to the read-only areas." << endl;
-		exit(0);
-	}
-	if(size > 8)
-	{
-		cout << "Memory: I am weak, I can't write so many bytes in one time" << endl;
-		exit(0);
-	}
-
-	unsigned char* tmp = (unsigned char*)content;
-	ull offset = src - ROInitAddr;
-
-	for(int i = 0; i < size; ++i)
-	{
-		ROMEMORY[offset+i] = tmp[i];
-	}
+	ull offset = dest - ROInitAddr;
+	memcpy((void *)ROMEMORY+offset, src, size);	
+}
+void Memory::loadRWMem(ull dest, ull src, ull size)
+{
+	ull offset = dest - RWInitAddr;
+	memcpy((void *)RWMEMORY+offset, src, size);	
 }

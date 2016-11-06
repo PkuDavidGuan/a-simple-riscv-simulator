@@ -9,21 +9,24 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include "memory.h"
 
 // ---- memory ----
-#define MEMSIZE 0x100000
+/*#define MEMSIZE 0x100000
 unsigned char RO_MEM[MEMSIZE];
-unsigned char RW_MEM[MEMSIZE];
+unsigned char RW_MEM[MEMSIZE];*/
 
 // -- note here when we deal with address, we keep the data dype uint64_t
 // -- this uint64_t is defined in sys/types.h or elf/h I am not very sure
 // -- but just use it 
-uint64_t ro_base;
-uint64_t rw_base;
+/*uint64_t ro_base;
+uint64_t rw_base;*/
+
+Memory* mymem = new Memory;
 
 // -- if this is a va in ro segment, use this function
 // -- typically this happens when you fetch instructions
-uint64_t va2rova(uint64_t va)
+/*uint64_t va2rova(uint64_t va)
 {
     return (uint64_t)RO_MEM + (va - ro_base);
 }
@@ -33,7 +36,7 @@ uint64_t va2rova(uint64_t va)
 uint64_t va2rwva(uint64_t va)
 {
     return (uint64_t)RW_MEM + (va - rw_base);
-}
+}*/
 
 // ---- registers ----
 uint64_t _eip;
@@ -45,12 +48,14 @@ char readbuffer[MEMSIZE];
 int loader(char *filename)
 {
     // set up the memory
-    memset(RO_MEM, 0, sizeof(RO_MEM));
-    memset(RW_MEM, 0, sizeof(RW_MEM));
+    /*memset(RO_MEM, 0, sizeof(RO_MEM));
+    memset(RW_MEM, 0, sizeof(RW_MEM));*/
 
     // read the binary file
     int fd = open(filename, O_RDONLY, 0);
     ssize_t lenf = read(fd, readbuffer, sizeof(readbuffer));
+
+    assert(lenf < MEMSIZE);
 
     printf("length of the binary file: 0x%lx\n", (unsigned long)lenf);
     
@@ -87,18 +92,14 @@ int loader(char *filename)
             if(ph->p_flags & PF_X)
             {
                 printf("flag = %x, exec, load to RO_MEM\n\n", (unsigned int)ph->p_flags);
-                ro_base = ph->p_va;
-                memcpy((void *)va2rova(ph->p_va), 
-                        ELFHDR + ph->p_offset, 
-                        ph->p_filesz);
+                mymem->setROInitAddr(ph->p_va);
+                mymem->loadROMEM(ph->p_va, ELFHDR + ph->p_offset, ph->p_filesz);
             }
             else
             {
                 printf("flag = %x, read write, load to RW_MEM\n\n", (unsigned int)ph->p_flags);
-                rw_base = ph->p_va;
-                memcpy((void *)va2rwva(ph->p_va), 
-                        ELFHDR + ph->p_offset, 
-                        ph->p_filesz);
+                mymem->setRWInitAddr(ph->p_va);
+                mymem->loadRWMEM(ph->p_va, ELFHDR + ph->p_offset, ph->p_filesz);
             } 
 
             total_load += 1;
