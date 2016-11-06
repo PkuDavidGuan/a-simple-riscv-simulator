@@ -256,6 +256,9 @@ void R_TYPE_funct7_1(string instruction) {
 		case "0000000":
 			R_TYPE_funct3_2(instruction);
 			break;
+		case "0000001":
+			M_TYPE_funct3_1(instruction);
+			break;
 		default:
 			cout << "Error when parsing instruction: " << instruction << endl;
 			cout << "R-TYPE funct7 error!" << endl;
@@ -272,6 +275,8 @@ void R_TYPE_funct7_2(string instruction) {
 		case "0000000":
 			R_TYPE_funct3_4(instruction);
 			break;
+		case "0000001":
+			M_TYPE_funct3_2(instruction);
 		default:
 			cout << "Error when parsing instruction: " << instruction << endl;
 			cout << "R-TYPE funct7 error!" << endl;
@@ -880,7 +885,7 @@ void auipc(string instruction) {
 	ULL rdVal = reg.getPC() + (ULL)immediateNum;
 	reg.setIntRegVal(rdVal, rdInt);
 }
-U_TYPE_opcode(string instruction) {
+void U_TYPE_opcode(string instruction) {
 	string opcode = instruction.substr(25, 7);
 	switch(opcode) {
 		case "0110111":
@@ -963,6 +968,344 @@ void SYS_INSTRUCTION(string instruction) {
 /*
 End of decoding system instructions
  */
+
+//===============This is a lovely dividing line===========
+//=======================================================
+
+/*
+This part finishes the decode part of M-TYPE and lists aLL the M-TYPE instructions
+ */
+void MUL(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		imulq rs2Val
+		movq %rax, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void MULH(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		imulq rs2Val
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void MULHSU(LL rs1Val, ULL rs2Val, int rdInt) {
+	LL rdVal;
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		imulq rs2Val
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void MULHU(ULL rs1Val, ULL rs2Val, int rdInt) {
+	LL rdVal;
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		mulq rs2Val
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void DIV(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(-1,rdInt);
+		return;
+	}
+	if((rs1Val ^ 0x8000000000000000 == 0) && (rs2Val == -1))
+	{
+		reg.setIntRegVal(rs1Val, rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		idivq rs2Val
+		movq %rax, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void DIVU(ULL rs1Val, ULL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(0x7fffffffffffffff,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		divq rs2Val
+		movq %rax, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void REM(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(rs1Val,rdInt);
+		return;
+	}
+	if((rs1Val ^ 0x8000000000000000 == 0) && (rs2Val == -1))
+	{
+		reg.setIntRegVal(0, rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		idivq rs2Val
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void REMU(ULL rs1Val, ULL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(rs1Val,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rdx
+		movq rs1Val, %rax
+		divq rs2Val
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void MULW(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	__asm
+	{
+		pushq %rax
+		pushq %rbx
+		pushq %rdx
+		movq rs1Val, %rax
+		movq rs2Val, %rbx
+		imull %ebx, %eax
+		movq %rax, rdVal
+		popq %rdx
+		popq %rbx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void DIVW(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(-1,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rbx
+		pushq %rdx
+		movq rs1Val, %rax
+		movq rs2Val, %rbx
+		idivl %ebx, %eax
+		movq %rax, rdVal
+		popq %rdx
+		popq %rbx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void DIVUW(ULL rs1Val, ULL rs2Val, int rdInt)
+{
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal(0x7fffffffffffffff,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rbx
+		pushq %rdx
+		movq rs1Val, %rax
+		movq rs2Val, %rbx
+		divl %ebx, %eax
+		movq %rax, rdVal
+		popq %rdx
+		popq %rbx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void REMW(LL rs1Val, LL rs2Val, int rdInt) {
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal((int)rs1Val,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rbx
+		pushq %rdx
+		movq rs1Val, %rax
+		movq rs2Val, %rbx
+		idivl %ebx, %eax
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rbx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void REMUW(ULL rs1Val, ULL rs2Val, int rdInt)
+{
+	LL rdVal;
+	if(rs2Val == 0)
+	{
+		reg.setIntRegVal((unsigned int)rs1Val,rdInt);
+		return;
+	}
+	__asm
+	{
+		pushq %rax
+		pushq %rbx
+		pushq %rdx
+		movq rs1Val, %rax
+		movq rs2Val, %rbx
+		divl %ebx, %eax
+		movq %rdx, rdVal
+		popq %rdx
+		popq %rbx
+		popq %rax
+	}
+	reg.setIntRegVal(rdVal, rdInt);
+}
+void M_TYPE_funct3_1(string instruction) {
+	//aLL M-TYPE instructions have the same part
+	int rs1Int = (content >> 15) & 31;
+	int rs2Int = (content >> 20) & 31;
+	int rdInt = (content >> 7) & 31;
+
+	ULL rs1Val = reg.getIntRegVal(rs1Int);
+	ULL rs2Val = reg.getIntRegVal(rs2Int);
+	//common part ends here
+
+	string funct3 = instruction.substr(17, 3);
+	switch(funct3) {
+		case "000":
+			MUL((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "001":
+			MULH((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "010":
+			MULHSU((LL)rs1Val, rs2Val, rdInt);
+			break;
+		case "011":
+			MULHU(rs1Val, rs2Val, rdInt);
+			break;
+		case "100":
+			DIV((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "101":
+			DIVU(rs1Val, rs2Val, rdInt);
+			break;
+		case "110":
+			REM((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "111":
+			REMU(rs1Val, rs2Val, rdInt);
+			break;			
+		default:
+			cout << "Error when parsing instruction: " << instruction << endl;
+			cout << "M-TYPE funct3 error!" << endl;
+			cout << "Exit!" << endl;
+			return;
+	}
+}
+
+void M_TYPE_funct3_2(string instruction) {
+	//aLL M-TYPE instructions have the same part
+	int rs1Int = (content >> 15) & 31;
+	int rs2Int = (content >> 20) & 31;
+	int rdInt = (content >> 7) & 31;
+
+	ULL rs1Val = reg.getIntRegVal(rs1Int);
+	ULL rs2Val = reg.getIntRegVal(rs2Int);
+	//common part ends here
+
+	string funct3 = instruction.substr(17, 3);
+	switch(funct3) {
+		case "000":
+			MULW((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "100":
+			DIVW((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "101":
+			DIVUW(rs1Val, rs2Val, rdInt);
+			break;
+		case "110":
+			REMW((LL)rs1Val, (LL)rs2Val, rdInt);
+			break;
+		case "111":
+			REMUW(rs1Val, rs2Val, rdInt);
+			break;			
+		default:
+			cout << "Error when parsing instruction: " << instruction << endl;
+			cout << "M-TYPE funct3 error!" << endl;
+			cout << "Exit!" << endl;
+			return;
+	}
+}
+/*
+End of decoding M-TPYE instructions
+ */
+
 //to get the type of the instruction
 void getOpcode(string instruction) {
 	string opcode = instruction.substr(25, 7);
