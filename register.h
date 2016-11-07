@@ -12,7 +12,7 @@ and use int to represent the Program Count.
 typedef long long LL;
 typedef unsigned long long ULL;
 
-typedef struct {
+class RegisterFile{
 private:
 	ULL pc;
 	ULL x[32];
@@ -36,4 +36,4 @@ public:
 	void setFloatRegVal(ULL value, int num) { f[num] = value; }
 	ULL getFloatRegVal(int num) { return f[num]; }
 
-} RegisterFile;
+}reg;

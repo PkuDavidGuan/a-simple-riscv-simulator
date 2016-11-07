@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include "memory.h"
+#include "decode.cpp"
 
 // ---- memory ----
 /*#define MEMSIZE 0x100000
@@ -21,8 +22,6 @@ unsigned char RW_MEM[MEMSIZE];*/
 // -- but just use it 
 /*uint64_t ro_base;
 uint64_t rw_base;*/
-
-Memory* mymem = new Memory;
 
 // -- if this is a va in ro segment, use this function
 // -- typically this happens when you fetch instructions
@@ -114,5 +113,6 @@ int loader(char *filename)
 int main()
 {
     loader("test");
+    decode(_eip);
     return 0;
 }

@@ -36,12 +36,12 @@ void Memory::rwmemoryWrite(ull content, ull src, int size)
 		exit(0);
 	}
 
-	unsigned char* tmp = (unsigned char*)content;
+	unsigned char* tmp = (unsigned char*)(&content);
 	ull offset = src - RWInitAddr;
 
 	for(int i = 0; i < size; ++i)
 	{
-		RWMEMORY[offset+i] = tmp[i];
+		RWMEMORY[offset + size - 1 - i] = tmp[7 - i];
 	}
 }
 

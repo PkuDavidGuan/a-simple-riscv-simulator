@@ -4,10 +4,10 @@
 #include <map>
 #include <cstring>
 #include "register.h"
+#include "memeory.h"
 
 using namespace std;
 
-ULLFile* reg;
 map<string, string> typeIndex;
 
 
@@ -15,8 +15,7 @@ int content;	//the integer value of one instruction
 
 
 //Initialize the map index and register file
-void Initialize(int startAddr) {
-	reg = new ULLFile();
+void Initialize(ULL startAddr) {
 	reg.setPC(startAddr);
 
 	content = 0;
@@ -1338,20 +1337,16 @@ void getOpcode(string instruction) {
 			return;
 	}
 }
-void decode(startAddr) {
+void decode(ULL startAddr) {
 	Initialize(startAddr);		//Initialize some variables and prepare for the decode part
 
+	char tempChar[4];
 	while(true) {
-		content = readMemory[reg.getPC()];
-		char tempChar[33];
 		memset(tempChar, 0, sizeof(tempChar));
-		int tempCount = 32;
-		while(tempCount) {
-			tempChar[tempCount - 1] = content % 2;
-			content /= 2;
-		}
-		string instruction(tempChar);
 
+		content = mymem->romemRead(reg->getPC(),4);
+		memcpy((void *)tempChar, (void *)(&content), 4);
+		string instruction(tempChar);
 		getOpcode(instruction);
 		reg.changePC(4);
 	}

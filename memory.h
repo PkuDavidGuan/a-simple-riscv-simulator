@@ -23,4 +23,4 @@ public:
 	void setRWInitAddr(ull addr) { RWInitAddr = addr; }
 	void loadROMem(ull dest, ull src, ull size);
 	void loadRWMem(ull dest, ull src, ull size);
-}
+}mymem;
