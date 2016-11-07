@@ -12,7 +12,7 @@ map<string, string> typeIndex;
 
 
 int content;	//the integer value of one instruction
-
+bool canjump = false;
 
 //Initialize the map index and register file
 void Initialize(ULL startAddr) {
@@ -135,7 +135,7 @@ void R_TYPE_funct3_1(string instruction) {
 
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
 	ULL rs2Val = reg.getIntRegVal(rs2Int);
-	//common part ends here
+	//common part ends hiere
 
 	string funct3 = instruction.substr(17, 3);
 	switch(funct3) {
@@ -750,6 +750,7 @@ void beq(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -766,6 +767,7 @@ void bne(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -782,6 +784,7 @@ void blt(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -798,6 +801,7 @@ void bge(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -814,6 +818,7 @@ void bltu(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -830,6 +835,7 @@ void bgeu(string instruction) {
 		ULL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 		ULL immediateNum = (immediateNum << 19) >> 19;
 
+		canjump = true;
 		reg.changePC(immediateNum);
 	}
 }
@@ -920,6 +926,8 @@ void jal(string instruction) {
 	immediateNum = (immediateNum << 43) >> 43;
 
 	reg.setIntRegVal((ULL)reg.getPC() + 4, rdInt);
+	
+	canjump = true;
 	reg.changePC( (ULL)immediateNum );
 }
 /*
@@ -945,7 +953,7 @@ void E_INS(string instruction) {
 		case "0":
 			ecall();
 			break;
-		case "1"：
+		case "1":
 			ebreak();
 			break;
 	}
@@ -1348,6 +1356,10 @@ void decode(ULL startAddr) {
 		memcpy((void *)tempChar, (void *)(&content), 4);
 		string instruction(tempChar);
 		getOpcode(instruction);
-		reg.changePC(4);
+
+		if(canjump)
+			canjump = false;
+		else
+			reg.changePC(4);
 	}
 }
