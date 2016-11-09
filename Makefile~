@@ -1,0 +1,12 @@
+all: simulator
+
+CC = gcc
+
+INCLUDE = .
+
+#CFLAGS = 
+
+OBJS = decode.o loader.o memory.o 
+
+simulator: $(OBJS)
+$(CC) -o simulator $(OBJS)

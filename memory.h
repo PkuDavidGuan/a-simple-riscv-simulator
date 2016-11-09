@@ -2,9 +2,15 @@
 Here gives the definition of the memory,
 and we choose to use an unsigned char array to represent the memory.
 */
+
+#ifndef MEMORY_H_
+#define MEMORY_H_
+
 #define MEMSIZE 0x100000
+
 typedef unsigned long long ull;
-class Memory()
+
+class Memory
 {
 private:
 	unsigned char RWMEMORY[MEMSIZE];            //read/write
@@ -23,4 +29,6 @@ public:
 	void setRWInitAddr(ull addr) { RWInitAddr = addr; }
 	void loadROMem(ull dest, ull src, ull size);
 	void loadRWMem(ull dest, ull src, ull size);
-}mymem;
+};
+
+#endif

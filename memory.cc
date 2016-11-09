@@ -1,5 +1,13 @@
+
 #include "memory.h"
 #include <string.h>
+#include <iostream>
+#include <unistd.h>
+#include <stdlib.h>
+
+using namespace std;
+
+// extern Memory mymem;
 
 Memory::Memory()
 {
@@ -8,7 +16,7 @@ Memory::Memory()
 	ROInitAddr = RWInitAddr = 0;
 }
 
-ull Memory::rwmemoryRead(ull src, int size)
+ull Memory::rwmemRead(ull src, int size)
 {
 	if(size > 8)
 	{
@@ -28,7 +36,7 @@ ull Memory::rwmemoryRead(ull src, int size)
 	return *((ull *)tmp);
 }
 
-void Memory::rwmemoryWrite(ull content, ull src, int size)
+void Memory::rwmemWrite(ull content, ull src, int size)
 {
 	if(size > 8)
 	{
@@ -45,7 +53,7 @@ void Memory::rwmemoryWrite(ull content, ull src, int size)
 	}
 }
 
-ull Memory::romemoryRead(ull src, int size)
+ull Memory::romemRead(ull src, int size)
 {
 	if(size > 8)
 	{
@@ -68,10 +76,10 @@ ull Memory::romemoryRead(ull src, int size)
 void Memory::loadROMem(ull dest, ull src, ull size)
 {
 	ull offset = dest - ROInitAddr;
-	memcpy((void *)ROMEMORY+offset, src, size);	
+	memcpy((void *)(ROMEMORY+offset), (void *) src, (size_t) size);	
 }
 void Memory::loadRWMem(ull dest, ull src, ull size)
 {
 	ull offset = dest - RWInitAddr;
-	memcpy((void *)RWMEMORY+offset, src, size);	
+	memcpy((void *)(RWMEMORY+offset), (void *) src, (size_t) size);	
 }
