@@ -15,7 +15,7 @@ loader.o:
 	$(CC) $(CFLAGS) -c loader.cpp
 
 decode.o:
-	$(CC) $(CFLAGS) -c decode.cc
+	$(CC) $(CFLAGS) -c decode.cpp
 
 memory.o:
 	$(CC) $(CFLAGS) -c memory.cc

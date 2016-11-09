@@ -1006,62 +1006,70 @@ End of decoding system instructions
 /*
 This part finishes the decode part of M-TYPE _and lists aLL the M-TYPE instructions
  */
- /*
+
 
 void MUL(LL rs1Val, LL rs2Val, int rdInt) {
 	LL rdVal;
-	__asm
+	__asm__ __volatile__
 	(
-		pushq %rax\n\t
-		pushq %rdx\n\t
-		movq rs1Val, %rax
-		imulq rs2Val
-		movq %rax, rdVal
-		popq %rdx
-		popq %rax
-	)
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rax\n\t"
+		"imulq %2\n\t"
+		"movq %%rax, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"r"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void MULH(LL rs1Val, LL rs2Val, int rdInt) {
 	LL rdVal;
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		imulq rs2Val
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rax\n\t"
+		"imulq %2\n\t"
+		"movq %%rdx, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"r"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void MULHSU(LL rs1Val, ULL rs2Val, int rdInt) {
 	LL rdVal;
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		imulq rs2Val
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rax\n\t"
+		"imulq %2\n\t"
+		"movq %%rax, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"r"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void MULHU(ULL rs1Val, ULL rs2Val, int rdInt) {
-	LL rdVal;
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		mulq rs2Val
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rax
-	}
+	ULL rdVal;
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rax\n\t"
+		"mulq %2\n\t"
+		"movq %%rdx, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"r"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIV(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1076,35 +1084,41 @@ void DIV(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal(rs1Val, rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		idivq rs2Val
-		movq %rax, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rdx\n\t"
+		"sarq $63, %%rdx\n\t"
+		"idivq %2\n\t"
+		"movq %%rax, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"m"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIVU(ULL rs1Val, ULL rs2Val, int rdInt) {
-	LL rdVal;
+	ULL rdVal;
 	if(rs2Val == 0)
 	{
 		reg.setIntRegVal(0x7fffffffffffffff,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		divq rs2Val
-		movq %rax, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rdx\n\t"
+		"shrq $63, %%rdx\n\t"
+		"divq %2\n\t"
+		"movq %%rax, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"m"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REM(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1119,52 +1133,60 @@ void REM(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal(0, rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		idivq rs2Val
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rdx\n\t"
+		"sarq $63, %%rdx\n\t"
+		"idivq %2\n\t"
+		"movq %%rdx, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"m"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REMU(ULL rs1Val, ULL rs2Val, int rdInt) {
-	LL rdVal;
+	ULL rdVal;
 	if(rs2Val == 0)
 	{
 		reg.setIntRegVal(rs1Val,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rdx
-		movq rs1Val, %rax
-		divq rs2Val
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rdx\n\t"
+		"shrq $63, %%rdx\n\t"
+		"divq %2\n\t"
+		"movq %%rdx, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"r"(rs1Val),"m"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void MULW(LL rs1Val, LL rs2Val, int rdInt) {
 	LL rdVal;
-	__asm
-	{
-		pushq %rax
-		pushq %rbx
-		pushq %rdx
-		movq rs1Val, %rax
-		movq rs2Val, %rbx
-		imull %ebx, %eax
-		movq %rax, rdVal
-		popq %rdx
-		popq %rbx
-		popq %rax
-	}
+	__asm__ __volatile__
+	(
+		"pushq %%rax\n\t"
+		"pushq %%rbx\n\t"
+		"pushq %%rdx\n\t"
+		"movq %1, %%rax\n\t"
+		"movq %2, %%rbx\n\t"
+		"imull %%ebx, %%eax\n\t"
+		"movq %%rax, %0\n\t"
+		"popq %%rdx\n\t"
+		"popq %%rbx\n\t"
+		"popq %%rax\n\t"
+		:"=m"(rdVal)
+		:"m"(rs1Val),"m"(rs2Val)
+	);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIVW(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1174,42 +1196,22 @@ void DIVW(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal(-1,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rbx
-		pushq %rdx
-		movq rs1Val, %rax
-		movq rs2Val, %rbx
-		idivl %ebx, %eax
-		movq %rax, rdVal
-		popq %rdx
-		popq %rbx
-		popq %rax
-	}
+	int rs1 = rs1Val;
+	int rs2 = rs2Val;
+	rdVal = (LL)(rs1/rs2);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIVUW(ULL rs1Val, ULL rs2Val, int rdInt)
 {
-	LL rdVal;
+	ULL rdVal;
 	if(rs2Val == 0)
 	{
 		reg.setIntRegVal(0x7fffffffffffffff,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rbx
-		pushq %rdx
-		movq rs1Val, %rax
-		movq rs2Val, %rbx
-		divl %ebx, %eax
-		movq %rax, rdVal
-		popq %rdx
-		popq %rbx
-		popq %rax
-	}
+	unsigned int rs1 = rs1Val;
+	unsigned int rs2 = rs2Val;
+	rdVal = (ULL)(rs1/rs2);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REMW(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1219,42 +1221,22 @@ void REMW(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal((int)rs1Val,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rbx
-		pushq %rdx
-		movq rs1Val, %rax
-		movq rs2Val, %rbx
-		idivl %ebx, %eax
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rbx
-		popq %rax
-	}
+	int rs1 = rs1Val;
+	int rs2 = rs2Val;
+	rdVal = (LL)(rs1%rs2);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REMUW(ULL rs1Val, ULL rs2Val, int rdInt)
 {
-	LL rdVal;
+	ULL rdVal;
 	if(rs2Val == 0)
 	{
 		reg.setIntRegVal((unsigned int)rs1Val,rdInt);
 		return;
 	}
-	__asm
-	{
-		pushq %rax
-		pushq %rbx
-		pushq %rdx
-		movq rs1Val, %rax
-		movq rs2Val, %rbx
-		divl %ebx, %eax
-		movq %rdx, rdVal
-		popq %rdx
-		popq %rbx
-		popq %rax
-	}
+	unsigned int rs1 = rs1Val;
+	unsigned int rs2 = rs2Val;
+	rdVal = (ULL)(rs1/rs2);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 
@@ -1339,7 +1321,7 @@ void M_TYPE_funct3_2(string instruction) {
 	}
 }
 
-*/
+
 
 /*
 End of decoding M-TPYE instructions
