@@ -113,7 +113,7 @@ frame_dummy():
 
 0000000000010164 <main>:
 main():
-/home/davidguan/Lab2.1/test.c:12
+/home/davidguan/a-simple-riscv-simulator/test.c:12
 
 // set .rodata section
 const int z = 1;
@@ -123,14 +123,14 @@ int main()
    10164:	ff010113          	addi	sp,sp,-16
    10168:	00813423          	sd	s0,8(sp)
    1016c:	01010413          	addi	s0,sp,16
-/home/davidguan/Lab2.1/test.c:13
+/home/davidguan/a-simple-riscv-simulator/test.c:13
     x = 1;
    10170:	00100713          	li	a4,1
    10174:	80e1a423          	sw	a4,-2040(gp) # 11518 <x>
-/home/davidguan/Lab2.1/test.c:14
+/home/davidguan/a-simple-riscv-simulator/test.c:14
     return 0;
    10178:	00000793          	li	a5,0
-/home/davidguan/Lab2.1/test.c:15
+/home/davidguan/a-simple-riscv-simulator/test.c:15
 }
    1017c:	00078513          	mv	a0,a5
    10180:	00813403          	ld	s0,8(sp)
