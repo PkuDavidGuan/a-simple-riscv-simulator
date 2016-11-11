@@ -6,28 +6,32 @@ and we choose to use an unsigned char array to represent the memory.
 #ifndef MEMORY_H_
 #define MEMORY_H_
 
-#define MEMSIZE 0x100000
-
+#define MEMSIZE 0x1000000
+#define MAY_STACK 0xfffffffffffdffff
 typedef unsigned long long ull;
 
 class Memory
 {
 private:
 	unsigned char RWMEMORY[MEMSIZE];            //read/write
-	unsigned char ROMEMORY[MEMSIZE];           //read-only
-	ull ROInitAddr;   //the beginning address of the read-only  areas
+	unsigned char STACK[2097152];               //stack
 	ull RWInitAddr;   //the beginning address of the read/write areas
 public:
 	Memory();
 	//Users and loader can use the following two functions to read/write in the RWMEMORY.
-	ull rwmemRead(ull src, int size);
-	void rwmemWrite(ull content, ull src, int size);
-	//Users can read the ROMEMROY, but only the loader can write in the ROMEMORY.
-	ull romemRead(ull src, int size);
-	//Loaders should set the ROInitAddr and RWInitAddr.
-	void setROInitAddr(ull addr) { ROInitAddr = addr; }
-	void setRWInitAddr(ull addr) { RWInitAddr = addr; }
-	void loadROMem(ull dest, ull src, ull size);
+	unsigned char rwmemReadByte(ull src);
+	void rwmemWriteByte(unsigned char content, ull src);
+
+	unsigned short rwmemReadShort(ull src);
+	void rwmemWriteShort(unsigned short content, ull src);
+
+	unsigned int rwmemReadWord(ull src);
+	void rwmemWriteWord(unsigned int content, ull src);
+
+	ull rwmemReadDword(ull src);
+	void rwmemWriteDword(ull content, ull src);
+	//Loaders should set the RWInitAddr.
+	void setRWInitAddr(ull addr);
 	void loadRWMem(ull dest, ull src, ull size);
 };
 

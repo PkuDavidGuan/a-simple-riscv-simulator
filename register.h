@@ -24,6 +24,7 @@ public:
 		memset(f, 0, sizeof(f));
 		pc = 0;
 		x[0] = 0;
+		x[2] = 0xffffffffffffffff;
 	}
 
 	void setPC(int value) { pc = value; }

@@ -1,12 +1,14 @@
 all: simulator test
 
 CC = g++
+RGCC = riscv64-unknown-elf-gcc
+OBJDUMP = riscv64-unknown-elf-objdump
 
 INCLUDE = .
 
 CFLAGS = -g -Wall
 
-OBJS = loader.o decode.o memory.o 
+OBJS = decode.o loader.o memory.o 
 
 simulator: $(OBJS)
 	$(CC) $(CFLAGS) -o simulator $(OBJS)
@@ -21,7 +23,8 @@ memory.o:
 	$(CC) $(CFLAGS) -c memory.cc
 
 test: test.o
-	$(CC) -o test test.c
+	$(RGCC) -g -o test test.c
+	$(OBJDUMP) -S -l -d  test > test.asm
 
 .PHONY: clean
 

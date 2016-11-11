@@ -4,7 +4,7 @@
 * memory.h/memory.cc:模拟内存。私有变量有ROMEM、RWMEM、STACK，公有接口提供ROMEM的读，RWMEM的读写，loader的加载过程。However，栈还没想好怎么写
 * register.h:模拟寄存器堆。
 * decode.cpp：模拟取址、译码、执行、访存、写回的所有过程。提供RV64I basic、M、F集的指令。
-
+* test.asm
 ##待完成工作
 * stack
 * memory.cc？不知道对不对，反正我感觉对了。。。。。

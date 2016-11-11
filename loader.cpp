@@ -13,12 +13,11 @@
 #include "memory.h"
 #include "elf.h"
 #include "register.h"
-// #include "decode.cpp"
+#include "decode.h"
 
 using namespace std;
 
-Memory mymem;
-RegisterFile reg;
+extern Memory mymem;
 
 // ---- memory ----
 /*#define MEMSIZE 0x100000
@@ -48,7 +47,7 @@ uint64_t va2rwva(uint64_t va)
 // ---- registers ----
 uint64_t _eip;
 
-void decode(ULL startAddr);
+//void decode(ULL startAddr);
 
 // ---- auxilary structures ----
 char readbuffer[MEMSIZE];
@@ -82,6 +81,26 @@ int loader(char *filename)
 
     ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
     eph = ph + ELFHDR->e_phnum;
+
+    for (; ph < eph; ph++)
+    {
+        if (ph->p_type == ELF_PROG_LOAD) 
+        {
+            // always assume only 2 segments to be load
+            // this is true for dhrystone, which we should finally get run
+            // if not, panic
+            assert(total_load < 2);
+
+            assert(ph->p_memsz < MEMSIZE);
+           
+            mymem.setRWInitAddr(ph->p_va);
+
+            total_load += 1;
+        }
+    }
+
+    total_load = 0;
+    ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
     for (; ph < eph; ph++)
     {
         if (ph->p_type == ELF_PROG_LOAD) 
@@ -101,13 +120,11 @@ int loader(char *filename)
             if(ph->p_flags & PF_X)
             {
                 printf("flag = %x, exec, load to RO_MEM\n\n", (unsigned int)ph->p_flags);
-                mymem.setROInitAddr(ph->p_va);
-                mymem.loadROMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
+                mymem.loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
             }
             else
             {
                 printf("flag = %x, read write, load to RW_MEM\n\n", (unsigned int)ph->p_flags);
-                mymem.setRWInitAddr(ph->p_va);
                 mymem.loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
             } 
 
@@ -124,6 +141,8 @@ int main()
 {
     char filename[] = "test";
     loader(filename);
+    printf("------------------------------------------------------\n");
+    printf("######successfully loaded, now we are decoding...#####\n");
     decode(_eip);
     return 0;
 }
