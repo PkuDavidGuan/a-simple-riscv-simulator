@@ -798,7 +798,7 @@ void bge(string instruction) {
 	int rs2Int = (content >> 20) & 31;
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
 	ULL rs2Val = reg.getIntRegVal(rs2Int);
-	if ( (LL)rs1Val < (LL)rs2Val) {
+	if ( (LL)rs1Val >= (LL)rs2Val) {
 		ULL immediateNum_1 = ((content >> 31) & 1) << 11;
 		ULL immediateNum_2 = ((content >> 7) & 1) << 10;
 		ULL immediateNum_3 = ((content >> 25) & 63) << 4;
@@ -832,7 +832,7 @@ void bgeu(string instruction) {
 	int rs2Int = (content >> 20) & 31;
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
 	ULL rs2Val = reg.getIntRegVal(rs2Int);
-	if (rs1Val > rs2Val) {
+	if (rs1Val >= rs2Val) {
 		ULL immediateNum_1 = ((content >> 31) & 1) << 11;
 		ULL immediateNum_2 = ((content >> 7) & 1) << 10;
 		ULL immediateNum_3 = ((content >> 25) & 63) << 4;
@@ -1370,9 +1370,5 @@ void decode(ULL startAddr) {
 			canjump = false;
 		else
 			reg.changePC(4);
-		{
-			int m;
-			cin >> m;
-		}
 	}
 }
