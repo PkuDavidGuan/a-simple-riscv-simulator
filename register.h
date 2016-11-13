@@ -16,7 +16,7 @@ class RegisterFile{
 private:
 	ULL pc;
 	ULL x[32];
-	ULL f[32];
+	double f[32];
 
 public:
 	RegisterFile() {
@@ -34,8 +34,8 @@ public:
 	void setIntRegVal(ULL value, int num) { if(num) x[num] = value; }
 	ULL getIntRegVal(int num) { return x[num]; }
 	
-	void setFloatRegVal(ULL value, int num) { f[num] = value; }
-	ULL getFloatRegVal(int num) { return f[num]; }
+	void setFloatRegVal(double value, int num) { f[num] = value; }
+	double getFloatRegVal(int num) { return f[num]; }
 
 };
 #endif
