@@ -950,6 +950,8 @@ End UJ-TYPE decode
 /*
 This part parses some system instructions
  */
+
+/*
 void ecall() {
     //make it can compile first.
 #define systemCall
@@ -958,7 +960,11 @@ void ecall() {
 }
 void ebreak() {
 	
-}
+}*/
+
+extern void ecall();
+extern void ebreak();
+
 void E_INS(string instruction) {
 	string diffPart = instruction.substr(11, 1);
 	switch(atoi(diffPart.c_str())) {

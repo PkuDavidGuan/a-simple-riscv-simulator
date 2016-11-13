@@ -8,7 +8,7 @@ INCLUDE = .
 
 CFLAGS = -g -Wall
 
-OBJS = decode.o loader.o memory.o 
+OBJS = decode.o loader.o memory.o syscall.o
 
 simulator: $(OBJS)
 	$(CC) $(CFLAGS) -o simulator $(OBJS)
@@ -22,11 +22,14 @@ decode.o:
 memory.o:
 	$(CC) $(CFLAGS) -c memory.cc
 
-test: test.o
+syscall.o: syscall.h
+	$(CC) $(CFLAGS) -c syscall.cc
+
+test: 
 	$(RGCC) -g -o test test.c
 	$(OBJDUMP) -S -l -d  test > test.asm
 
 .PHONY: clean
 
 clean:
-	rm -rf *.o simulator test
+	rm -rf *.o simulator test.asm test
