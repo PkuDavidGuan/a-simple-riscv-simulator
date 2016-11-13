@@ -298,6 +298,7 @@ void R_TYPE_funct7_2(string instruction) {
 		case 1:
             void M_TYPE_funct3_2(string instruction);
 			M_TYPE_funct3_2(instruction);
+			break;
 		default:
 			cout << "Error when parsing instruction: " << instruction << endl;
 			cout << "R-TYPE funct7 error!" << endl;

@@ -1,22 +1,16 @@
 #include <stdio.h>
-
+#include <string.h>
+int a[5][5];
+int b[5][5];
+int c[5][5];
 int main()
 {
-    int a[2][2] = {{1,2},{3,4}};
-    int b[2][2] = {{1,2},{3,4}};
-    int c[2][2];
-    int i = 0;
-    int j = 0;
-    int k = 0;
-    for(; i < 2; ++i)
-    {
-	for(j = 0; j < 2; ++j)
-	{
-	    for(k = 0; k < 2; ++k)
-	    {
-		c[i][j] += a[i][k]*b[k][j];
-	    }
-	}
-    }
-    return 0;
+	int num,i,j,k;
+	double lala;
+	num = 5;
+	for(i = 0; i < num; ++i)
+		for(j = 0; j < num; ++j)
+			for(k = 0; k < num; ++k)
+				c[i][j] += a[i][k]*b[k][j];
+	return 0;
 }

@@ -26,7 +26,7 @@ syscall.o: syscall.h
 	$(CC) $(CFLAGS) -c syscall.cc
 
 test: 
-	$(RGCC) -g -o test test.c
+	$(RGCC) -g -o test matrix.c
 	$(OBJDUMP) -S -l -d  test > test.asm
 
 .PHONY: clean
