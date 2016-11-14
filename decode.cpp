@@ -1559,15 +1559,17 @@ void FLoad_funct3(string instruction)
 	int tempInt = atoi(funct3.c_str());
 	if(tempInt == 10)
 	{
-		float * loadData;
+		float * loadData = new float;
 		*((unsigned int *)loadData) = mymem.rwmemReadWord(immediateNum + rs1Val);
 		reg.setFloatRegVal(*loadData, rdInt);
+		delete loadData;
 	}
 	else if(tempInt == 11)
 	{
-		double * LoadData;
+		double * LoadData = new double;
 		*((ULL *)LoadData) = mymem.rwmemReadDword(immediateNum + rs1Val);
 		reg.setFloatRegVal(*LoadData, rdInt);
+		delete LoadData;
 	}
 	else
 	{
