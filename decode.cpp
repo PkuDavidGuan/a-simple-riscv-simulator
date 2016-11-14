@@ -487,9 +487,9 @@ void jalr(string instruction) {
 	int rdInt = (content >> 7) & 31;
 	LL immediateNum = content >> 20;
 
-	cout << "immediateNum: " << hex << immediateNum << endl;
-	cout << "rs1Int: " << rs1Int << endl;
-	cout << "rdInt: " << rdInt << endl;
+	//cout << "immediateNum: " << hex << immediateNum << endl;
+	//cout << "rs1Int: " << rs1Int << endl;
+	//cout << "rdInt: " << rdInt << endl;
 
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
@@ -914,16 +914,16 @@ void auipc(string instruction) {
 	int rdInt = (content >> 7) & 31;
 	LL immediateNum = (LL)( (content >> 12) << 12 );	//The 32-bit result is sign-extended to 64 bits.
 
-	cout << "immediateNum: " << hex << immediateNum << endl;
-	cout << "rdInt: " << rdInt << endl;
+	//cout << "immediateNum: " << hex << immediateNum << endl;
+	//cout << "rdInt: " << rdInt << endl;
 
 	ULL rdVal = reg.getPC() + (ULL)immediateNum;
-	cout << "rdVal: " << rdVal << endl;
+	//cout << "rdVal: " << rdVal << endl;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void U_TYPE_opcode(string instruction) {
 	string opcode = instruction.substr(25, 7);
-	cout << atoi(opcode.c_str()) << endl;
+	//cout << atoi(opcode.c_str()) << endl;
 	switch(atoi(opcode.c_str())) {
 		case 110111:
 			lui(instruction);
@@ -1889,16 +1889,16 @@ void decode(ULL startAddr) {
 	while(true) {
 		memset(tempChar, 0, sizeof(tempChar));
 
-		cout << "PC: " << reg.getPC() << endl;
-		cout << "PC: hex " << std::hex << reg.getPC() << endl;
+		//cout << "PC: " << reg.getPC() << endl;
+		//cout << "PC: hex " << std::hex << reg.getPC() << endl;
 		content = mymem.rwmemReadWord(reg.getPC());
-		printf("%02x\n",content);
+		//printf("%02x\n",content);
 		for(int i = 0; i < 32; ++i)
             tempChar[31 - i] = (content & (1 << i)) == 0 ? '0' : '1';
         tempChar[32] = 0;
 		string instruction(tempChar);
 
-		std::cout << instruction << endl;
+		//std::cout << instruction << endl;
 		getOpcode(instruction);
 
 		if(canjump)
