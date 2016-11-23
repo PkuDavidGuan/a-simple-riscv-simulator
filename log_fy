@@ -1,0 +1,114 @@
+from printf_test.asm
+the printf_test.c call graph
+10164 main
+--  10328 printf
+    --  10378 vfprintf_r
+        --  14458 _localeconv_r
+        --  163e0 strlen
+        --  13de0 __sinit
+        --  14fa4 memset
+        --  120d4 __swsetup_r 
+            // now want to change the return value to be 0
+            // if buff is null, cannot write
+            // if fp->_flags & __SWR == 0, cannot write
+            // something get wrong here
+            
+            what does this function do?
+            first it checks the fp flags, if not ok return EOF --  and this is where we get, if ok, create a buffer
+            we need to make this ok and let it create a buffer 
+        -- 
+
+some debug info:
+1. not very sure if malloc called during printf()
+2. can be sure that malloc is compiled as _malloc_r in printf_test.c
+    the malloc function is call _malloc_r just like that printf function is calling vfprintf_r
+3. malloc returned null after malloc() -- which is wrong!
+    need to implement it further 
+
+need to be done
+1. implement malloc -- take over _malloc_r -- should be good here
+2. print the execution chain and the corresponding instruction
+    and see if printf called malloc? -- seems not, because not sys_brk called
+    printf do called malloc to build a print buffer for formated printing -- and something is wrong here 
+3. need to know why printf failed? is that because of no malloc buffer?
+    if not because of malloc buffer, we may need to check something about the stdout file descriptor
+    no, it is because of failed file flag -- solved by changing the condition
+
+the present solution:
+    1. change __swsetup_r to change the file writable flag -- but now still wrong
+    2. change the malloc to make sure the buffer is provided
+
+the present problem:
+    the formatted printing is wrong -- not solved 
+    fd flag wrong
+  
+-------------------------------------------------------------------------
+update 18th nov 2016, 14:00
+
+need to do:
+    1. roll back to the version that successfully changed the file flag --ok
+    2. check out why taking-over-malloc is wrong -- I think it is because of the change of stack pointer -- because when make buf, we set s3 = 0, which should be the address of the fmt, now we restore it
+    3. restore s3
+
+------------------------------------------------------------------------
+update 18th nov 2016, 23:19
+
+started simgle step debugging
+come to some where later than pc = 0x10418, a5 started to differ
+now want to debug from 103e8 and see when did a6 started to differ
+there should be something wrong with the instruction slli and srli
+
+
+13:31 seems like that a6 always goes the same as a5, why?
+coming to 0x12104, a5 start to differ -- because the incorrect implementation of srli instruction
+coming to 0x12103, find out a3 differ 
+
+23:39, bug find out:
+bug1: a6 always goes the same as a5 -- because I got it wrong 
+bug2: wrong order of bytes... line 1776, decode.cpp and line 
+
+------------------------------------------------------------------------
+update 19th nov 2016
+
+01:30: bug find out:
+1. come to 0x1457c, a3 wrong, this is why segmentation fault
+2. come to 0x1453c - 0x14540, it turns out that something wrong with malloc because after this procedure call we should have somethinig for register a3
+3. malloc function is defined in 0x1462c
+
+TO-DOs:
+start debug from 0x1462c tomorrow, trace s3 and the relative number in the stack -- maybe something wrong in the stack?
+
+12:35
+come to 0x14630, seems good here
+note that we need to focus on the register s3 --- or a3?
+
+18:19
+solved the s3 problem, successfully printed hello world! x = 10
+but did this hardly, need to find out when to solve the buffer address
+need to trace the __smakebuf_r function to find out the address of the buffer and find out why it is not solved in the stack
+the printf function called the __smakebuf_r function in address 12198, printf_test_int.asm
+and in __smakebuf_r, the address of the buffer should be stored in the stack
+
+18:46 the control flow in __smakebuf_r
+l50
+did not enter the if statement in between
+l59
+l75, l79
+l86, did not enter
+l96
+l99 call malloc
+l112, set base pointer
+    this should be where the buffer is
+    and this line, in the .asm code is in address 1455c
+
+19:44 problem:
+the pointer of the format is lost in the stack ---- why did that happen?
+how to solve this? trace the stack
+start with the start of printf, note that the format pointer is restored in a3 or s3.
+mind code it when eat ... 
+
+21:31
+why s3 wrong?
+stored in the stack in address 0x144a0
+resumed in address 1457c -- and got wrong here
+

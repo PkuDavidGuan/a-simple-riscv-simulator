@@ -121,6 +121,9 @@ int loader(char *filename)
             {
                 printf("flag = %x, exec, load to RO_MEM\n\n", (unsigned int)ph->p_flags);
                 mymem.loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
+                uint64_t tmpbrk = ROUNDUP((uint64_t) (ph->p_va) + (uint64_t) (ph->p_filesz), PGSIZE);
+                printf("set heap pointer brk: 0x%lx\n", tmpbrk);
+                mymem.setbrk(tmpbrk);
             }
             else
             {
@@ -139,7 +142,9 @@ int loader(char *filename)
 // -- in your simulator
 int main()
 {
-    char filename[] = "test";
+    char filename[20];
+    printf("Let me know the name of the elf file:");
+    scanf("%s", filename);
     loader(filename);
     printf("------------------------------------------------------\n");
     printf("######successfully loaded, now we are decoding...#####\n");

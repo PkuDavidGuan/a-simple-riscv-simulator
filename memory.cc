@@ -4,14 +4,19 @@
 #include <iostream>
 #include <unistd.h>
 #include <stdlib.h>
+#include "register.h"
+
+#define TRACEMEM 0x225d8
+#define HITLIMIT 1
 
 using namespace std;
-
+extern RegisterFile reg;
 Memory::Memory()
 {
 	memset(RWMEMORY, 0,sizeof(RWMEMORY));
 	memset(STACK, 0, sizeof(STACK));
 	RWInitAddr = -1;
+	hittime = 0;
 }
 
 unsigned char Memory::rwmemReadByte(ull src)
@@ -25,6 +30,20 @@ unsigned char Memory::rwmemReadByte(ull src)
 }
 void Memory::rwmemWriteByte(unsigned char content, ull src)
 {
+
+	if(src == TRACEMEM)
+	{
+		hittime ++;
+		// printf("pc: 0x%lx, hit TRACEMEM\n", reg.getPC());
+		// printf("content changed to 0x%lx\n", content);
+		/*
+		if(hittime == HITLIMIT)
+		{
+			printf("hit TRACEMEM\n");
+			while(1);
+		}*/
+	}
+
 	if(src >= MAY_STACK)
 	{
 		STACK[src-MAY_STACK] = content;
@@ -57,6 +76,21 @@ unsigned short Memory::rwmemReadShort(ull src)
 }
 void Memory::rwmemWriteShort(unsigned short content, ull src)
 {
+
+	if(src == TRACEMEM)
+	{
+		hittime ++;
+		// printf("pc: 0x%lx, hit TRACEMEM\n", reg.getPC());
+		// printf("content changed to 0x%lx\n", content);
+		/*
+		if(hittime == HITLIMIT)
+		{
+			printf("hit TRACEMEM\n");
+			while(1);
+		}*/
+	}
+
+
 	ull offset;
 	if(src >= MAY_STACK)
 	{
@@ -97,6 +131,20 @@ unsigned int Memory::rwmemReadWord(ull src)
 }
 void Memory::rwmemWriteWord(unsigned int content, ull src)
 {
+	if(src == TRACEMEM)
+	{
+		hittime ++;
+		// printf("pc: 0x%lx, hit TRACEMEM\n", reg.getPC());
+		// printf("content changed to 0x%lx\n", content);
+		/*
+		if(hittime == HITLIMIT)
+		{
+			printf("hit TRACEMEM\n", content);
+			while(1);
+		}*/
+	}
+
+
 	ull offset;
 	if(src >= MAY_STACK)
 	{
@@ -139,11 +187,31 @@ ull Memory::rwmemReadDword(ull src)
 		tmp[5] = RWMEMORY[offset + 5];
 		tmp[6] = RWMEMORY[offset + 6];
 		tmp[7] = RWMEMORY[offset + 7];
-	}	
+	}
+	/*	
+	if(src == 0xfffffffffffffcbf + 136)
+	{
+		printf("reading number 0x%lx into target address\n", *((ull *)tmp));
+	}*/
 	return *((ull *)tmp);
 }
 void Memory::rwmemWriteDword(ull content, ull src)
 {
+
+	if(src == TRACEMEM)
+	{
+		hittime ++;
+		// printf("pc: 0x%lx, hit TRACEMEM\n", reg.getPC());
+		// printf("content changed to 0x%lx\n", content);
+		/*
+		if(hittime == HITLIMIT)
+		{
+			printf("hit TRACEMEM\n", content);
+			while(1);
+		}*/
+	}
+
+
 	ull offset;
 	if(src >= MAY_STACK)
 	{
@@ -169,4 +237,24 @@ void Memory::loadRWMem(ull dest, ull src, ull size)
 {
 	ull offset = dest - RWInitAddr;
 	memcpy((void *)(RWMEMORY+offset), (void *) src, (size_t) size);	
+}
+
+#define BRKSIZE 0X1000
+uint64_t Memory::sbrk(uint64_t position)
+{
+	uint64_t tmpbrk = position;
+	// printf("sbrk, the position is: 0x%lx\n", position);
+	brk = ROUNDUP(position, BRKSIZE);
+	// brk += ROUNDUP(len, BRKSIZE);
+	// printf("sbrk, increase brk from 0x%lx to 0x%lx\n", tmpbrk, brk);
+	return tmpbrk;
+}
+
+uint64_t Memory::sbrk_tkor(uint64_t len)
+{
+	uint64_t tmpbrk = brk;
+	// printf("sbrk_tkor, the position is: 0x%lx\n", position);
+	brk += ROUNDUP(len, BRKSIZE);
+	// printf("sbrk_tkor, increase brk from 0x%lx to 0x%lx\n", tmpbrk, brk);
+	return tmpbrk;
 }

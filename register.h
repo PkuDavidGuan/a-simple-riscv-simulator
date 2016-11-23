@@ -8,6 +8,10 @@ and use int to represent the Program Count.
 #define REGISTER_H
 
 #include <string.h>
+#include "syscall.h"
+
+//#define STARTSTACK 0xfffffffffffffff0
+ #define STARTSTACK 0x00000000fefffb50
 
 typedef long long LL;
 typedef unsigned long long ULL;
@@ -16,7 +20,7 @@ class RegisterFile{
 private:
 	ULL pc;
 	ULL x[32];
-	double f[32];
+	ULL f[32];
 
 public:
 	RegisterFile() {
@@ -24,18 +28,23 @@ public:
 		memset(f, 0, sizeof(f));
 		pc = 0;
 		x[0] = 0;
-		x[2] = 0xffffffffffffffff;
+		x[2] = STARTSTACK;
 	}
 
 	void setPC(int value) { pc = value; }
 	void changePC(ULL offset) { pc += offset; }
 	ULL getPC() { return pc; }
 
-	void setIntRegVal(ULL value, int num) { if(num) x[num] = value; }
+	void setIntRegVal(ULL value, int num) 
+	{ 
+		if(num) x[num] = value; 
+	}
 	ULL getIntRegVal(int num) { return x[num]; }
 	
-	void setFloatRegVal(double value, int num) { f[num] = value; }
-	double getFloatRegVal(int num) { return f[num]; }
+	void setFloatRegVal(ULL value, int num) { f[num] = value; }
+	ULL getFloatRegVal(int num) { return f[num]; }
+
+	const void show();
 
 };
 #endif

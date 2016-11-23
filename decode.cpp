@@ -3,11 +3,14 @@
 #include <stack>
 #include <map>
 #include <cstring>
+#include <cstdio>
 #include <iostream>
 #include <iomanip>
 #include <assert.h>
 #include "register.h"
 #include "memory.h"
+#include "syscall.h"
+#include <time.h>
 
 using namespace std;
 
@@ -62,7 +65,8 @@ void sra(ULL rs1Val, ULL rs2Val, int rdInt) {
 	LL rdVal = (LL)rs1Val >> rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
-void add(ULL rs1Val, ULL rs2Val, int rdInt) {
+void add(ULL rs1Val, ULL rs2Val, int rdInt) 
+{
 	LL rdVal = (LL)rs1Val + (LL)rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
@@ -113,6 +117,7 @@ void addw(ULL rs1Val, ULL rs2Val, int rdInt) {
 	int src_1 = rs1Val;
 	int src_2 = rs2Val;
 	int sum = src_1 + src_2;
+	// printf("test for addw, src_1 = %d, src_2 = %d, sum = %d\n", src_1, src_2, sum);
 	LL rdVal = sum;
 	reg.setIntRegVal((ULL)rdVal, rdInt);
 }
@@ -214,11 +219,12 @@ void R_TYPE_funct3_2(string instruction) {
 }
 void R_TYPE_funct3_3(string instruction) {
 	//aLL R-TYPE instructions have the same part
-	int rs1Val = (content >> 15) & 31;
-	int rs2Val = (content >> 20) & 31;
-	int rdInt = (content >> 7) & 31;
+	int rs1Int = (content >> 15) & 31;
+	int rs2Int = (content >> 20) & 31;
+	ULL rdInt = (content >> 7) & 31;
 
-	rs1Val = reg.getIntRegVal(rs1Val);
+	ULL rs1Val = reg.getIntRegVal(rs1Int);
+	ULL rs2Val = reg.getIntRegVal(rs2Int);
 	//common part ends here
 
 	string funct3 = instruction.substr(17, 3);
@@ -239,11 +245,12 @@ void R_TYPE_funct3_3(string instruction) {
 }
 void R_TYPE_funct3_4(string instruction) {
 	//aLL R-TYPE instructions have the same part
-	int rs1Val = (content >> 15) & 31;
-	int rs2Val = (content >> 20) & 31;
+	int rs1Int = (content >> 15) & 31;
+	int rs2Int = (content >> 20) & 31;
 	int rdInt = (content >> 7) & 31;
 
-	rs1Val = reg.getIntRegVal(rs1Val);
+	ULL rs1Val = reg.getIntRegVal(rs1Int);
+	ULL rs2Val = reg.getIntRegVal(rs2Int);
 	//common part ends here
 
 	string funct3 = instruction.substr(17, 3);
@@ -266,7 +273,7 @@ void R_TYPE_funct3_4(string instruction) {
 	}
 }
 void R_TYPE_funct7_1(string instruction) {
-	string funct7 = instruction.substr(0, 7);
+	string funct7 = instruction.substr(0, 7); // wrong order
 	switch(atoi(funct7.c_str())) {
 		case 100000:
 			R_TYPE_funct3_1(instruction);
@@ -287,7 +294,7 @@ void R_TYPE_funct7_1(string instruction) {
 	}
 }
 void R_TYPE_funct7_2(string instruction) {
-	string funct7 = instruction.substr(0, 7);
+	string funct7 = instruction.substr(0, 7);// wrong order
 	switch(atoi(funct7.c_str())) {
 		case 100000:
 			R_TYPE_funct3_3(instruction);
@@ -307,7 +314,9 @@ void R_TYPE_funct7_2(string instruction) {
 			return;
 	}
 }
-void R_TYPE_opcode(string instruction) {
+void R_TYPE_opcode(string instruction) 
+{
+
 	string opcode = instruction.substr(25, 7);
 	switch(atoi(opcode.c_str())) {
 		case 110011:
@@ -345,11 +354,14 @@ void slli(string instruction) {
 }
 void srli(string instruction) {
 	LL shamt = (content >> 20) & 63;
+	// printf("shift %d\n", (int)shamt);
 	int rs1Int = (content >> 15) & 31;
+	// printf("shift register %d\n", (int)rs1Int);
 	int rdInt = (content >> 7) & 31;
+	// printf("the result will be stored into register %d\n", (int)rdInt);
 
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
-	ULL rdVal = rs1Val >> shamt;
+	ULL rdVal = ((uint64_t)rs1Val) >> shamt;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void srai(string instruction) {
@@ -426,7 +438,7 @@ void lb(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	reg.setIntRegVal((LL)(mymem.rwmemReadByte(immediateNum + rs1Val)), rdInt);
+	reg.setIntRegVal((char)(mymem.rwmemReadByte(immediateNum + rs1Val)), rdInt);
 }
 void lh(string instruction) {
 	int rs1Int = (content >> 15) & 31;
@@ -434,7 +446,7 @@ void lh(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	LL loadData = (LL)(mymem.rwmemReadShort(immediateNum + rs1Val));
+	LL loadData = (short)(mymem.rwmemReadShort(immediateNum + rs1Val));
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void lw(string instruction) {
@@ -443,7 +455,7 @@ void lw(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
-	LL loadData = (LL)(mymem.rwmemReadWord(immediateNum + rs1Val));
+	LL loadData = (int)(mymem.rwmemReadWord(immediateNum + rs1Val));
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void ld(string instruction) {
@@ -487,9 +499,9 @@ void jalr(string instruction) {
 	int rdInt = (content >> 7) & 31;
 	LL immediateNum = content >> 20;
 
-	//cout << "immediateNum: " << hex << immediateNum << endl;
-	//cout << "rs1Int: " << rs1Int << endl;
-	//cout << "rdInt: " << rdInt << endl;
+	// cout << "immediateNum: " << hex << immediateNum << endl;
+	// cout << "rs1Int: " << rs1Int << endl;
+	// cout << "rdInt: " << rdInt << endl;
 
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
@@ -546,12 +558,12 @@ void I_TYPE_funct3_1(string instruction) {
 			slli(instruction);
 			break;
 		case 101: {
-            string funct7 = instruction.substr(0, 7);
+            string funct7 = instruction.substr(0, 6); // previously got wrong here 
             switch (atoi(funct7.c_str())) {
                 case 0:
                     srli(instruction);
                     break;
-                case 100000:
+                case 10000:
                     srai(instruction);
                     break;
             }
@@ -626,12 +638,12 @@ void I_TYPE_funct3_3(string instruction) {
 			slliw(instruction);
 			break;
 		case 101: {
-            string funct7 = instruction.substr(0, 7);
+            string funct7 = instruction.substr(0, 6);
             switch (atoi(funct7.c_str())) {
                 case 0:
                     srliw(instruction);
                     break;
-                case 100000:
+                case 10000:
                     sraiw(instruction);
                     break;
             }
@@ -645,7 +657,8 @@ void I_TYPE_funct3_3(string instruction) {
 			return;
 	}
 }
-void I_TYPE_opcode(string instruction) {
+void I_TYPE_opcode(string instruction) 
+{
 	string opcode = instruction.substr(25, 7);
 	switch(atoi(opcode.c_str())) {
 		case 10011:
@@ -726,11 +739,12 @@ void sd(string instruction) {
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
 	LL memoryAddr = immediateNum + rs1Val;
-	ULL rs2Val = reg.getIntRegVal(rs2Int);
+	LL rs2Val = reg.getIntRegVal(rs2Int);
 
 	mymem.rwmemWriteDword(rs2Val, memoryAddr);
 }
-void S_TYPE_funct3(string instruction) {
+void S_TYPE_funct3(string instruction) 
+{
 	string funct3 = instruction.substr(17, 3);
 	switch(atoi(funct3.c_str())) {
 		case 0:
@@ -865,7 +879,8 @@ void bgeu(string instruction) {
 		reg.changePC(immediateNum);
 	}
 }
-void SB_TYPE_funct3(string instruction) {
+void SB_TYPE_funct3(string instruction) 
+{
 	string funct3 = instruction.substr(17, 3);
 	switch(atoi(funct3.c_str())) {
 		case 0:
@@ -921,7 +936,8 @@ void auipc(string instruction) {
 	//cout << "rdVal: " << rdVal << endl;
 	reg.setIntRegVal(rdVal, rdInt);
 }
-void U_TYPE_opcode(string instruction) {
+void U_TYPE_opcode(string instruction) 
+{
 	string opcode = instruction.substr(25, 7);
 	//cout << atoi(opcode.c_str()) << endl;
 	switch(atoi(opcode.c_str())) {
@@ -957,6 +973,18 @@ void jal(string instruction) {
 	LL immediateNum_4 = ((content >> 21) & 1023);
 	LL immediateNum = (immediateNum_1 + immediateNum_2 + immediateNum_3 + immediateNum_4) << 1;
 	immediateNum = (immediateNum << 43) >> 43;
+
+	/*
+	uint64_t pcdest = reg.getPC() + (uint64_t) immediateNum;
+	switch(pcdest)
+	{
+	case MALLOCDEST:
+		printf("call malloc! take over!\n");
+		malloc_tkor();
+		return;
+	default:
+		break;
+	}*/
 
 	reg.setIntRegVal((ULL)reg.getPC() + 4, rdInt);
 	
@@ -1024,68 +1052,24 @@ End of decoding system instructions
 This part finishes the decode part of M-TYPE and lists aLL the M-TYPE instructions
  */
 void MUL(LL rs1Val, LL rs2Val, int rdInt) {
-	LL rdVal;
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rax\n\t"
-		"imulq %2\n\t"
-		"movq %%rax, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"r"(rs2Val)
-	);
-	reg.setIntRegVal(rdVal, rdInt);
+	__int128 rdVal = (__int128)rs1Val*(__int128)rs2Val;
+	
+	reg.setIntRegVal((ULL)rdVal, rdInt);
 }
 void MULH(LL rs1Val, LL rs2Val, int rdInt) {
-	LL rdVal;
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rax\n\t"
-		"imulq %2\n\t"
-		"movq %%rdx, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"r"(rs2Val)
-	);
-	reg.setIntRegVal(rdVal, rdInt);
+	__int128 rdVal = (__int128)rs1Val*(__int128)rs2Val;
+	rdVal = rdVal >> 64;
+	reg.setIntRegVal((ULL)rdVal, rdInt);
 }
 void MULHSU(LL rs1Val, ULL rs2Val, int rdInt) {
-	LL rdVal;
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rax\n\t"
-		"imulq %2\n\t"
-		"movq %%rax, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"r"(rs2Val)
-	);
-	reg.setIntRegVal(rdVal, rdInt);
+	__int128 rdVal = (__int128)rs1Val*(__int128)rs2Val;
+	rdVal = rdVal >> 64;
+	reg.setIntRegVal((ULL)rdVal, rdInt);
 }
 void MULHU(ULL rs1Val, ULL rs2Val, int rdInt) {
-	ULL rdVal;
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rax\n\t"
-		"mulq %2\n\t"
-		"movq %%rdx, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"r"(rs2Val)
-	);
-	reg.setIntRegVal(rdVal, rdInt);
+	__int128 rdVal = (__int128)rs1Val*(__int128)rs2Val;
+	rdVal = rdVal >> 64;
+	reg.setIntRegVal((ULL)rdVal, rdInt);
 }
 void DIV(LL rs1Val, LL rs2Val, int rdInt) {
 	LL rdVal;
@@ -1099,19 +1083,7 @@ void DIV(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal(rs1Val, rdInt);
 		return;
 	}
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rdx\n\t"
-		"sarq $63, %%rdx\n\t"
-		"idivq %2\n\t"
-		"movq %%rax, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"m"(rs2Val)
-	);
+	rdVal = rs1Val/rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIVU(ULL rs1Val, ULL rs2Val, int rdInt) {
@@ -1121,19 +1093,7 @@ void DIVU(ULL rs1Val, ULL rs2Val, int rdInt) {
 		reg.setIntRegVal(0x7fffffffffffffff,rdInt);
 		return;
 	}
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rdx\n\t"
-		"shrq $63, %%rdx\n\t"
-		"divq %2\n\t"
-		"movq %%rax, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"m"(rs2Val)
-	);
+	rdVal = rs1Val/rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REM(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1148,19 +1108,7 @@ void REM(LL rs1Val, LL rs2Val, int rdInt) {
 		reg.setIntRegVal(0, rdInt);
 		return;
 	}
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rdx\n\t"
-		"sarq $63, %%rdx\n\t"
-		"idivq %2\n\t"
-		"movq %%rdx, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"m"(rs2Val)
-	);
+	rdVal = rs1Val%rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void REMU(ULL rs1Val, ULL rs2Val, int rdInt) {
@@ -1170,38 +1118,11 @@ void REMU(ULL rs1Val, ULL rs2Val, int rdInt) {
 		reg.setIntRegVal(rs1Val,rdInt);
 		return;
 	}
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rdx\n\t"
-		"shrq $63, %%rdx\n\t"
-		"divq %2\n\t"
-		"movq %%rdx, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"r"(rs1Val),"m"(rs2Val)
-	);
+	rdVal = rs1Val%rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void MULW(LL rs1Val, LL rs2Val, int rdInt) {
-	LL rdVal;
-	__asm__ __volatile__
-	(
-		"pushq %%rax\n\t"
-		"pushq %%rbx\n\t"
-		"pushq %%rdx\n\t"
-		"movq %1, %%rax\n\t"
-		"movq %2, %%rbx\n\t"
-		"imull %%ebx, %%eax\n\t"
-		"movq %%rax, %0\n\t"
-		"popq %%rdx\n\t"
-		"popq %%rbx\n\t"
-		"popq %%rax\n\t"
-		:"=m"(rdVal)
-		:"m"(rs1Val),"m"(rs2Val)
-	);
+	LL rdVal = (int)rs1Val * (int)rs2Val;
 	reg.setIntRegVal(rdVal, rdInt);
 }
 void DIVW(LL rs1Val, LL rs2Val, int rdInt) {
@@ -1251,7 +1172,7 @@ void REMUW(ULL rs1Val, ULL rs2Val, int rdInt)
 	}
 	unsigned int rs1 = rs1Val;
 	unsigned int rs2 = rs2Val;
-	rdVal = (ULL)(rs1/rs2);
+	rdVal = (ULL)(rs1%rs2);
 	reg.setIntRegVal(rdVal, rdInt);
 }
 
@@ -1352,10 +1273,32 @@ void FSQRT_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
 
 }
+
+
 void FSGNJ_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-
+	ULL rs1Val = reg.getFloatRegVal(rs1Int);
+    ULL rs2Val = reg.getFloatRegVal(rs2Int);
+    ULL rdVal = reg.getFloatRegVal(rdInt);
+    ULL temp1 = (rs1Val) & 0x8000000000000000;
+    ULL temp2 = (rs2Val) & 0x8000000000000000;
+    ULL tempd = (rs1Val) & 0x7fffffffffffffff;
+    if(rmInt == 0)
+    {
+        tempd += temp2;
+    }
+    else if(rmInt == 1)
+    {
+        tempd += (temp2 ^ 0x8000000000000000);
+    }
+    else if(rmInt == 2)
+    {
+        tempd += (temp1 ^ temp2);
+    }
+    reg.setFloatRegVal(tempd, rdInt);
 }
+
+
 void FMIN_MAX_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
 
@@ -1368,54 +1311,76 @@ void FCLASS(int rs1Int, int rs2Int, int rdInt, int rmInt)
 
 void FADD_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	double rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val+rs2Val, rdInt);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
+	ULL temp2 = reg.getFloatRegVal(rs2Int);
+	double rs2Val = *(double *)&temp2;
+	double result = rs1Val+rs2Val;
+	reg.setFloatRegVal(*(ULL *)&result, rdInt);
 }
 void FSUB_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	double rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val+rs2Val, rdInt);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
+	ULL temp2 = reg.getFloatRegVal(rs2Int);
+	double rs2Val = *(double *)&temp2;
+	double result = rs1Val-rs2Val;
+	reg.setFloatRegVal(*(ULL *)&result, rdInt);
 }
 void FMUL_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	double rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val*rs2Val, rdInt);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
+	ULL temp2 = reg.getFloatRegVal(rs2Int);
+	double rs2Val = *(double *)&temp2;
+	double result = rs1Val*rs2Val;
+	reg.setFloatRegVal(*(ULL *)&result, rdInt);
 }
 void FMUL(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	float rs1Val = reg.getFloatRegVal(rs1Int);
-	float rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val*rs2Val, rdInt);
+	unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+	unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+	float rs1Val = *(float *)&temp1;
+	float rs2Val = *(float *)&temp2;
+	float result = rs1Val*rs2Val;
+	reg.setFloatRegVal(*(unsigned int *)&result, rdInt);
 }
 void FDIV(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	float rs1Val = reg.getFloatRegVal(rs1Int);
-	float rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val/rs2Val, rdInt);
+	unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+	unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+	float rs1Val = *(float *)&temp1;
+	float rs2Val = *(float *)&temp2;
+	float result = rs1Val/rs2Val;
+	reg.setFloatRegVal(*(unsigned int *)&result, rdInt);
 }
 void FDIV_D(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	double rs2Val = reg.getFloatRegVal(rs2Int);
-	reg.setFloatRegVal(rs1Val/rs2Val, rdInt);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
+	ULL temp2 = reg.getFloatRegVal(rs2Int);
+	double rs2Val = *(double *)&temp2;
+	double result = rs1Val*rs2Val;
+	reg.setFloatRegVal(*(ULL *)&result, rdInt);
 }
 void FCVT_SD(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	float rs1Val = reg.getFloatRegVal(rs1Int);
-	reg.setFloatRegVal(rs1Val, rdInt);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	float rs1Val = *(double *)&temp1;
+	reg.setFloatRegVal(*(unsigned int *)&rs1Val, rdInt);
 }
 void FCVT_DS(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	float rs1Val = reg.getFloatRegVal(rs1Int);
-	reg.setFloatRegVal(rs1Val, rdInt);
+	unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(float *)&temp1;
+	reg.setFloatRegVal(*(ULL *)&rs1Val, rdInt);
 }
 void FEQ_LT_LE(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	double rs2Val = reg.getFloatRegVal(rs2Int);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
+	ULL temp2 = reg.getFloatRegVal(rs2Int);
+	double rs2Val = *(double *)&temp2;
 	if(rmInt == 0)
 	{
 		if(rs1Val <= rs2Val)
@@ -1446,7 +1411,8 @@ void FEQ_LT_LE(int rs1Int, int rs2Int, int rdInt, int rmInt)
 }
 void FCVT_WD_LD(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	double rs1Val = reg.getFloatRegVal(rs1Int);
+	ULL temp1 = reg.getFloatRegVal(rs1Int);
+	double rs1Val = *(double *)&temp1;
 	if(rs2Int == 0)
 	{
 		reg.setIntRegVal((int)rs1Val, rdInt);
@@ -1474,23 +1440,27 @@ void FCVT_DW_DL(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
 	if(rs2Int == 0)
 	{
-		int rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal(rs1Val, rdInt);
+		int temp = reg.getIntRegVal(rs1Int);
+		double rs1Val = temp;
+		reg.setFloatRegVal(*(ULL *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 1)
 	{
-		unsigned int rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal(rs1Val, rdInt);
+		unsigned int temp = reg.getIntRegVal(rs1Int);
+		double rs1Val = temp;
+		reg.setFloatRegVal(*(ULL *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 2)
 	{
-		long long rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal(rs1Val, rdInt);
+		long long temp = reg.getIntRegVal(rs1Int);
+		double rs1Val = temp;
+		reg.setFloatRegVal(*(ULL *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 3)
 	{
-		unsigned long long rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal(rs1Val, rdInt);
+		ULL temp = reg.getIntRegVal(rs1Int);
+		double rs1Val = temp;
+		reg.setFloatRegVal(*(ULL *)&rs1Val, rdInt);
 	}
 	else
 	{
@@ -1506,35 +1476,37 @@ void FMV_XD(int rs1Int, int rs2Int, int rdInt, int rmInt)
 		FCLASS(rs1Int, rs2Int, rdInt, rmInt);
 		return;
 	}
-	double rs1Val = reg.getFloatRegVal(rs1Int);
-	reg.setIntRegVal(*((unsigned long long *)(&rs1Val)),rdInt);
+	reg.setIntRegVal(reg.getFloatRegVal(rs1Int),rdInt);
 }
 void FMV_DX(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
-	unsigned long long rs1Val = reg.getIntRegVal(rs1Int);
-	reg.setFloatRegVal(*((double *)(&rs1Val)),rdInt);
+	reg.setFloatRegVal(reg.getIntRegVal(rs1Int),rdInt);
 }
 void FCVT_SW_SL(int rs1Int, int rs2Int, int rdInt, int rmInt)
 {
 	if(rs2Int == 0)
 	{
-		int rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal((float)rs1Val, rdInt);
+		int temp = reg.getIntRegVal(rs1Int);
+		float rs1Val = temp;
+		reg.setFloatRegVal(*(unsigned int *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 1)
 	{
-		unsigned int rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal((float)rs1Val, rdInt);
+		unsigned int temp = reg.getIntRegVal(rs1Int);
+		float rs1Val = temp;
+		reg.setFloatRegVal(*(unsigned int *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 2)
 	{
-		long long rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal((float)rs1Val, rdInt);
+		long long temp = reg.getIntRegVal(rs1Int);
+		float rs1Val = temp;
+		reg.setFloatRegVal(*(unsigned int *)&rs1Val, rdInt);
 	}
 	else if(rs2Int == 3)
 	{
-		unsigned long long rs1Val = reg.getIntRegVal(rs1Int);
-		reg.setFloatRegVal((float)rs1Val, rdInt);
+		ULL temp = reg.getIntRegVal(rs1Int);
+		float rs1Val = temp;
+		reg.setFloatRegVal(*(unsigned int *)&rs1Val, rdInt);
 	}
 	else
 	{
@@ -1559,17 +1531,11 @@ void FLoad_funct3(string instruction)
 	int tempInt = atoi(funct3.c_str());
 	if(tempInt == 10)
 	{
-		float * loadData = new float;
-		*((unsigned int *)loadData) = mymem.rwmemReadWord(immediateNum + rs1Val);
-		reg.setFloatRegVal(*loadData, rdInt);
-		delete loadData;
+		reg.setFloatRegVal(mymem.rwmemReadWord(immediateNum + rs1Val), rdInt);
 	}
 	else if(tempInt == 11)
 	{
-		double * LoadData = new double;
-		*((ULL *)LoadData) = mymem.rwmemReadDword(immediateNum + rs1Val);
-		reg.setFloatRegVal(*LoadData, rdInt);
-		delete LoadData;
+		reg.setFloatRegVal(mymem.rwmemReadDword(immediateNum + rs1Val), rdInt);
 	}
 	else
 	{
@@ -1596,13 +1562,11 @@ void FStore_funct3(string instruction)
 	int tempInt = atoi(funct3.c_str());
 	if(tempInt == 10)
 	{
-		float rs2Val = reg.getFloatRegVal(rs2Int);
-		mymem.rwmemWriteWord(*((unsigned int *)(&rs2Val)), memoryAddr);
+		mymem.rwmemWriteWord((unsigned int)(reg.getFloatRegVal(rs2Int)), memoryAddr);
 	}
 	else if(tempInt == 11)
 	{
-		double rs2val = reg.getFloatRegVal(rs2Int);
-		mymem.rwmemWriteDword(*((ULL *)(&rs2val)), memoryAddr);
+		mymem.rwmemWriteDword(reg.getFloatRegVal(rs2Int), memoryAddr);
 	}
 	else
 	{
@@ -1624,19 +1588,25 @@ void FMadd_funct2(string instruction)
 	int tempInt = atoi(funct2.c_str());
 	if(tempInt == 0)
 	{
-		float rs1Val = reg.getFloatRegVal(rs1Int);
-		float rs2Val = reg.getFloatRegVal(rs2Int);
-		float rs3Val = reg.getFloatRegVal(rs3Int);
+		unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+		float rs1Val = *(float *)&temp1;
+		unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+		float rs2Val = *(float *)&temp2;
+		unsigned int temp3 = reg.getFloatRegVal(rs3Int);
+		float rs3Val = *(float *)&temp3;
 		float rdVal = rs1Val*rs2Val + rs3Val;
-		reg.setFloatRegVal(rdVal, rdInt);
+		reg.setFloatRegVal(*(unsigned int *)&rdVal, rdInt);
 	}
 	else if(tempInt == 1)
 	{
-		double rs1val = reg.getFloatRegVal(rs1Int);
-		double rs2val = reg.getFloatRegVal(rs2Int);
-		double rs3val = reg.getFloatRegVal(rs3Int);
-		double rdval = rs1val*rs2val + rs3val;
-		reg.setFloatRegVal(rdval, rdInt);
+		ULL temp1 = reg.getFloatRegVal(rs1Int);
+	    double rs1Val = *(double *)&temp1;
+		ULL temp2 = reg.getFloatRegVal(rs2Int);
+		double rs2Val = *(double *)&temp2;
+		ULL temp3 = reg.getFloatRegVal(rs3Int);
+		double rs3Val = *(double *)&temp3;
+		double rdVal = rs1Val*rs2Val + rs3Val;
+		reg.setFloatRegVal(*(ULL *)&rdVal, rdInt);
 	}
 	else
 	{
@@ -1658,19 +1628,25 @@ void FMsub_funct2(string instruction)
 	int tempInt = atoi(funct2.c_str());
 	if(tempInt == 0)
 	{
-			float rs1Val = reg.getFloatRegVal(rs1Int);
-			float rs2Val = reg.getFloatRegVal(rs2Int);
-			float rs3Val = reg.getFloatRegVal(rs3Int);
-			float rdVal = rs1Val*rs2Val - rs3Val;
-			reg.setFloatRegVal(rdVal, rdInt);
+		unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+		float rs1Val = *(float *)&temp1;
+		unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+		float rs2Val = *(float *)&temp2;
+		unsigned int temp3 = reg.getFloatRegVal(rs3Int);
+		float rs3Val = *(float *)&temp3;
+		float rdVal = rs1Val*rs2Val - rs3Val;
+		reg.setFloatRegVal(*(unsigned int *)&rdVal, rdInt);
 	}
 	else if(tempInt == 1)
 	{
-			double rs1val = reg.getFloatRegVal(rs1Int);
-			double rs2val = reg.getFloatRegVal(rs2Int);
-			double rs3val = reg.getFloatRegVal(rs3Int);
-			double rdval = rs1val*rs2val - rs3val;
-			reg.setFloatRegVal(rdval, rdInt);
+		ULL temp1 = reg.getFloatRegVal(rs1Int);
+	    double rs1Val = *(double *)&temp1;
+		ULL temp2 = reg.getFloatRegVal(rs2Int);
+		double rs2Val = *(double *)&temp2;
+		ULL temp3 = reg.getFloatRegVal(rs3Int);
+		double rs3Val = *(double *)&temp3;
+		double rdVal = rs1Val*rs2Val - rs3Val;
+		reg.setFloatRegVal(*(ULL *)&rdVal, rdInt);
 	}
 	else
 	{
@@ -1692,19 +1668,25 @@ void FNMsub_funct2(string instruction)
 	int tempInt = atoi(funct2.c_str());
 	if(tempInt == 0)
 	{
-			float rs1Val = reg.getFloatRegVal(rs1Int);
-			float rs2Val = reg.getFloatRegVal(rs2Int);
-			float rs3Val = reg.getFloatRegVal(rs3Int);
-			float rdVal = -(rs1Val*rs2Val - rs3Val);
-			reg.setFloatRegVal(rdVal, rdInt);
+		unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+		float rs1Val = *(float *)&temp1;
+		unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+		float rs2Val = *(float *)&temp2;
+		unsigned int temp3 = reg.getFloatRegVal(rs3Int);
+		float rs3Val = *(float *)&temp3;
+		float rdVal = -(rs1Val*rs2Val - rs3Val);
+		reg.setFloatRegVal(*(unsigned int *)&rdVal, rdInt);
 	}
 	else if(tempInt == 1)
 	{
-			double rs1val = reg.getFloatRegVal(rs1Int);
-			double rs2val = reg.getFloatRegVal(rs2Int);
-			double rs3val = reg.getFloatRegVal(rs3Int);
-			double rdval = -(rs1val*rs2val - rs3val);
-			reg.setFloatRegVal(rdval, rdInt);
+		ULL temp1 = reg.getFloatRegVal(rs1Int);
+	    double rs1Val = *(double *)&temp1;
+		ULL temp2 = reg.getFloatRegVal(rs2Int);
+		double rs2Val = *(double *)&temp2;
+		ULL temp3 = reg.getFloatRegVal(rs3Int);
+		double rs3Val = *(double *)&temp3;
+		double rdVal = -(rs1Val*rs2Val - rs3Val);
+		reg.setFloatRegVal(*(ULL *)&rdVal, rdInt);
 	}
 	else
 	{
@@ -1726,19 +1708,25 @@ void FNMadd_funct2(string instruction)
 	int tempInt = atoi(funct2.c_str());
 	if(tempInt == 0)
 	{
-			float rs1Val = reg.getFloatRegVal(rs1Int);
-			float rs2Val = reg.getFloatRegVal(rs2Int);
-			float rs3Val = reg.getFloatRegVal(rs3Int);
-			float rdVal = -(rs1Val*rs2Val + rs3Val);
-			reg.setFloatRegVal(rdVal, rdInt);
+		unsigned int temp1 = reg.getFloatRegVal(rs1Int);
+		float rs1Val = *(float *)&temp1;
+		unsigned int temp2 = reg.getFloatRegVal(rs2Int);
+		float rs2Val = *(float *)&temp2;
+		unsigned int temp3 = reg.getFloatRegVal(rs3Int);
+		float rs3Val = *(float *)&temp3;
+		float rdVal = -(rs1Val*rs2Val + rs3Val);
+		reg.setFloatRegVal(*(unsigned int *)&rdVal, rdInt);
 	}
 	else if(tempInt == 1)
 	{
-			double rs1val = reg.getFloatRegVal(rs1Int);
-			double rs2val = reg.getFloatRegVal(rs2Int);
-			double rs3val = reg.getFloatRegVal(rs3Int);
-			double rdval = -(rs1val*rs2val + rs3val);
-			reg.setFloatRegVal(rdval, rdInt);
+		ULL temp1 = reg.getFloatRegVal(rs1Int);
+	    double rs1Val = *(double *)&temp1;
+		ULL temp2 = reg.getFloatRegVal(rs2Int);
+		double rs2Val = *(double *)&temp2;
+		ULL temp3 = reg.getFloatRegVal(rs3Int);
+		double rs3Val = *(double *)&temp3;
+		double rdVal = -(rs1Val*rs2Val + rs3Val);
+		reg.setFloatRegVal(*(ULL *)&rdVal, rdInt);
 	}
 	else
 	{
@@ -1757,40 +1745,42 @@ void F_TYPE_funct7(string instruction)
 	int rdInt = (content >> 7) & 31;
 	int rmInt = (content >> 12) & 7;
 
-	string funct7 = instruction.substr(0, 7);
-	switch(atoi(funct7.c_str())) {
-		case 0000001:
+	string funct7 = instruction.substr(0, 7); // and got the wrong order here 
+	int tmpint = atoi(funct7.c_str());
+	 
+	switch(tmpint) {
+		case 100001:
+			FCVT_DS(rs1Int, rs2Int, rdInt, rmInt);
+			break;
+		case 1:
 			FADD_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0000101:
+		case 101:
 			FSUB_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0001001:
+		case 1001:
             FMUL_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0001000:
+		case 1000:
 			FMUL(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0001100:
+		case 1100:
 			FDIV(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0001101:
+		case 1101:
 			FDIV_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0101101:
+		case 101101:
 			FSQRT_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0010001:
+		case 10001:
 			FSGNJ_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0010101:
+		case 10101:
 			FMIN_MAX_D(rs1Int, rs2Int, rdInt, rmInt);
 			break;
-		case 0100000:
+		case 100000:
 			FCVT_SD(rs1Int, rs2Int, rdInt, rmInt);
-			break;
-		case 0100001:
-			FCVT_DS(rs1Int, rs2Int, rdInt, rmInt);
 			break;
 		case 1010001:
 			FEQ_LT_LE(rs1Int, rs2Int, rdInt, rmInt);
@@ -1830,6 +1820,7 @@ void getOpcode(string instruction) {
 	/*
 	R-TYPE:1; I-TYPE:2; S-TYPE:3; SB-TYPE:4; UJ-TYPE:5; U-TYPE:6; SYS-TYPE:7;
 	 */
+	
 
 	switch(typeIndex[opcode]) {
 		case 1:
@@ -1882,28 +1873,180 @@ void getOpcode(string instruction) {
 			return;
 	}
 }
+
 void decode(ULL startAddr) {
 	Initialize(startAddr);		//Initialize some variables and prepare for the decode part
-
 	char tempChar[33];
+
+
+	uint64_t tmpfmt;
+	bool isdebug;
+	cout << "MODE:0 is for NORMAL, 1 is for DEBUG.Please choose one number: ";
+	cin >> isdebug;
+	int hittime = 0;
+	int Number_Of_Runs;
+	uint64_t pcdebug = 0;
+	uint64_t memdebug;
+	uint64_t valdebug;
+	uint64_t currentpc;
+	string debugbuff;
+	long      	Begin_Time,
+                End_Time,
+                User_Time;
+	float Dhrystones_Per_Second;
+
+
+	Begin_Time = clock();
+
 	while(true) {
 		memset(tempChar, 0, sizeof(tempChar));
 
 		//cout << "PC: " << reg.getPC() << endl;
 		//cout << "PC: hex " << std::hex << reg.getPC() << endl;
 		content = mymem.rwmemReadWord(reg.getPC());
-		//printf("%02x\n",content);
-		for(int i = 0; i < 32; ++i)
-            tempChar[31 - i] = (content & (1 << i)) == 0 ? '0' : '1';
-        tempChar[32] = 0;
-		string instruction(tempChar);
 
-		//std::cout << instruction << endl;
-		getOpcode(instruction);
+		// from here we do some modification and continue the test
+		/*
+		if(content == 0x164000ef)
+		{
+			printf("call malloc!\n");
+			malloc_tkor();
+		}*/
+		if(content == 0x04068263)
+		{
+			;// printf("comming to __swsetup_r!\n");
+			// reg.setIntRegVal(0, REGA3);
+		}
+
+
+
+
+
+		currentpc = reg.getPC();
+		// hopefully you cannot see this
+		if(currentpc == 0x1048c && content == 0x31c010ef)
+		{
+			int n;
+			scanf("%d", &n);
+			reg.setIntRegVal(n, REGS7);
+			Number_Of_Runs = n;
+			reg.changePC(4);
+		}
+
+
+
+		
+		
+		/*
+		else if(currentpc == 0x10a08)
+		{
+			printf("hit here!\n");
+			End_Time = clock();
+			User_Time = End_Time - Begin_Time;
+			Dhrystones_Per_Second = ((float) 60 * (float) Number_Of_Runs)
+                        / (float) User_Time;
+			fflush(stdout);
+			printf ("%6.1f \n", Dhrystones_Per_Second);
+			fflush(stdout);
+		}*/
+		
+		else
+		{
+			// before decode, check the excution flow of the code
+
+			int rdInt = (content >> 7) & 31;
+			// printf("pc = 0x%.8lx, content: 0x%.8lx, dest register: %x\n", reg.getPC(), content, rdInt);
+
+			if(reg.getPC() == pcdebug)
+			{
+				isdebug = true;
+			}
+			
+			if(reg.getPC() == 0x178d4)
+			{
+				hittime++;
+				if(hittime == 2)
+				{
+					printf("comming to pc = 0x178d4, reset a3\n");
+					// reg.setIntRegVal(0x0, REGA3);
+				}
+			}
+			
+			
+			// now decode
+			for(int i = 0; i < 32; ++i)
+				tempChar[31 - i] = (content & (1 << i)) == 0 ? '0' : '1';
+			tempChar[32] = 0;
+			string instruction(tempChar);
+
+			//std::cout << instruction << endl;
+			getOpcode(instruction);
+
+			if(isdebug)
+			{
+				printf("pc = 0x%.8lx, content: 0x%.8lx, dest register: %x\n", reg.getPC(), content, rdInt);
+				reg.show();
+			}
+		}
+
+		if(isdebug)
+		{
+		Debug:
+			cout << "> ";
+			cin >> debugbuff;
+			if(debugbuff == "b")
+			{
+				cout << "> ";
+				scanf("%lx", &pcdebug);
+				// cout << pcdebug << endl;
+				// while(1);
+				isdebug = false;
+			}
+			else if(debugbuff == "c")
+			{
+				isdebug = false;
+			}
+			else if(debugbuff == "m")
+			{
+				isdebug = false;
+				cout << "> ";
+				scanf("%lx", &memdebug);
+				printf("0x%lx\n", mymem.rwmemReadDword(memdebug));
+				goto Debug;
+			}
+			else if(debugbuff == "q")
+			{
+				exit(1);
+			}
+			else if(debugbuff == "s")
+			{
+				isdebug = true;
+			}
+			else if(debugbuff == "w")
+			{
+				isdebug = false;
+				cout << "addr  > ";
+				scanf("%lx", &memdebug);
+				cout << "value > ";
+				scanf("%lx", &valdebug);
+				printf("write 0x%lx into 0x%lx\n", valdebug, memdebug);
+				mymem.rwmemWriteDword(valdebug, memdebug);
+				goto Debug;
+			}
+			else
+			{
+				goto Debug;
+			}
+		}
 
 		if(canjump)
+		{
 			canjump = false;
+			printf("jump to address 0x%lx\n", reg.getPC());
+		}
 		else
+		{
 			reg.changePC(4);
+		}
 	}
 }
