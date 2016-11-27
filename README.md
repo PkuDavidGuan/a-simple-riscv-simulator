@@ -15,6 +15,7 @@
 * storage.h： 基类，提供access_counter、miss_num等记录信息以及本级存储hit延时和截至传输延迟。
 * cache.h: cache实现，目前实现了handlerequest和替换策略。
 * memory.h： 提供成员_mem_，作为虚拟内存。
+
 ##使用简介：
 >     依赖关系：
 首先安装riscv工具链。
