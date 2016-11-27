@@ -8,14 +8,14 @@
 #include <iomanip>
 #include <assert.h>
 #include "register.h"
-#include "memory.h"
+#include "memory_sim.h"
 #include "syscall.h"
 #include <time.h>
 
 using namespace std;
 
 RegisterFile reg;
-Memory mymem;
+Memory_SIM *mymem = new Memory_SIM();
 map<string, int> typeIndex;
 int content;	//the integer value of one instruction
 bool canjump = false;
@@ -438,7 +438,7 @@ void lb(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	reg.setIntRegVal((char)(mymem.rwmemReadByte(immediateNum + rs1Val)), rdInt);
+	reg.setIntRegVal((char)(mymem->rwmemReadByte(immediateNum + rs1Val)), rdInt);
 }
 void lh(string instruction) {
 	int rs1Int = (content >> 15) & 31;
@@ -446,7 +446,7 @@ void lh(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	LL loadData = (short)(mymem.rwmemReadShort(immediateNum + rs1Val));
+	LL loadData = (short)(mymem->rwmemReadShort(immediateNum + rs1Val));
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void lw(string instruction) {
@@ -455,7 +455,7 @@ void lw(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	ULL rs1Val = reg.getIntRegVal(rs1Int);
-	LL loadData = (int)(mymem.rwmemReadWord(immediateNum + rs1Val));
+	LL loadData = (int)(mymem->rwmemReadWord(immediateNum + rs1Val));
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void ld(string instruction) {
@@ -464,7 +464,7 @@ void ld(string instruction) {
 	LL immediateNum = (LL)content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	LL loadData = (LL)(mymem.rwmemReadDword(immediateNum + rs1Val));
+	LL loadData = (LL)(mymem->rwmemReadDword(immediateNum + rs1Val));
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void lbu(string instruction) {
@@ -473,7 +473,7 @@ void lbu(string instruction) {
 	LL immediateNum = content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	ULL loadData = mymem.rwmemReadByte(immediateNum + rs1Val);
+	ULL loadData = mymem->rwmemReadByte(immediateNum + rs1Val);
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void lhu(string instruction) {
@@ -482,7 +482,7 @@ void lhu(string instruction) {
 	LL immediateNum = content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	ULL loadData = mymem.rwmemReadShort(immediateNum + rs1Val);
+	ULL loadData = mymem->rwmemReadShort(immediateNum + rs1Val);
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void lwu(string instruction) {
@@ -491,7 +491,7 @@ void lwu(string instruction) {
 	LL immediateNum = content >> 20;
 
 	LL rs1Val = (LL)reg.getIntRegVal(rs1Int);
-	ULL loadData = mymem.rwmemReadWord(immediateNum + rs1Val);
+	ULL loadData = mymem->rwmemReadWord(immediateNum + rs1Val);
 	reg.setIntRegVal((ULL)loadData, rdInt);
 }
 void jalr(string instruction) {
@@ -702,7 +702,7 @@ void sb(string instruction) {
 	LL memoryAddr = immediateNum + rs1Val;
 	char rs2Val = reg.getIntRegVal(rs2Int);
 
-	mymem.rwmemWriteByte(rs2Val, memoryAddr);
+	mymem->rwmemWriteByte(rs2Val, memoryAddr);
 }
 void sh(string instruction) {
 	int rs1Int = (content >> 15) & 31;
@@ -715,7 +715,7 @@ void sh(string instruction) {
 	LL memoryAddr = immediateNum + rs1Val;
 	short rs2Val = reg.getIntRegVal(rs2Int);
 
-	mymem.rwmemWriteShort(rs2Val, memoryAddr);
+	mymem->rwmemWriteShort(rs2Val, memoryAddr);
 }
 void sw(string instruction) {
 	int rs1Int = (content >> 15) & 31;
@@ -728,7 +728,7 @@ void sw(string instruction) {
 	LL memoryAddr = immediateNum + rs1Val;
 	int rs2Val = reg.getIntRegVal(rs2Int);
 
-	mymem.rwmemWriteWord(rs2Val, memoryAddr);
+	mymem->rwmemWriteWord(rs2Val, memoryAddr);
 }
 void sd(string instruction) {
 	int rs1Int = (content >> 15) & 31;
@@ -741,7 +741,7 @@ void sd(string instruction) {
 	LL memoryAddr = immediateNum + rs1Val;
 	LL rs2Val = reg.getIntRegVal(rs2Int);
 
-	mymem.rwmemWriteDword(rs2Val, memoryAddr);
+	mymem->rwmemWriteDword(rs2Val, memoryAddr);
 }
 void S_TYPE_funct3(string instruction) 
 {
@@ -1531,11 +1531,11 @@ void FLoad_funct3(string instruction)
 	int tempInt = atoi(funct3.c_str());
 	if(tempInt == 10)
 	{
-		reg.setFloatRegVal(mymem.rwmemReadWord(immediateNum + rs1Val), rdInt);
+		reg.setFloatRegVal(mymem->rwmemReadWord(immediateNum + rs1Val), rdInt);
 	}
 	else if(tempInt == 11)
 	{
-		reg.setFloatRegVal(mymem.rwmemReadDword(immediateNum + rs1Val), rdInt);
+		reg.setFloatRegVal(mymem->rwmemReadDword(immediateNum + rs1Val), rdInt);
 	}
 	else
 	{
@@ -1562,11 +1562,11 @@ void FStore_funct3(string instruction)
 	int tempInt = atoi(funct3.c_str());
 	if(tempInt == 10)
 	{
-		mymem.rwmemWriteWord((unsigned int)(reg.getFloatRegVal(rs2Int)), memoryAddr);
+		mymem->rwmemWriteWord((unsigned int)(reg.getFloatRegVal(rs2Int)), memoryAddr);
 	}
 	else if(tempInt == 11)
 	{
-		mymem.rwmemWriteDword(reg.getFloatRegVal(rs2Int), memoryAddr);
+		mymem->rwmemWriteDword(reg.getFloatRegVal(rs2Int), memoryAddr);
 	}
 	else
 	{
@@ -1901,9 +1901,18 @@ void decode(ULL startAddr) {
 	while(true) {
 		memset(tempChar, 0, sizeof(tempChar));
 
+		// if(reg.getPC() == 0x11d40)
+		// {
+		// 		printf("memory content:\n");
+		// 		for(int i = 0; i < 8; ++i)
+		// 			printf("%x ", mymem->VM._mem_[0x11d40+i]);
+		// 		printf("\n");
+		// 		mymem->PrintCache(0x11d40);			
+		// }
+
 		//cout << "PC: " << reg.getPC() << endl;
 		//cout << "PC: hex " << std::hex << reg.getPC() << endl;
-		content = mymem.rwmemReadWord(reg.getPC());
+		content = mymem->rwmemReadWord(reg.getPC());
 
 		// from here we do some modification and continue the test
 		/*
@@ -1955,7 +1964,7 @@ void decode(ULL startAddr) {
 			// before decode, check the excution flow of the code
 
 			int rdInt = (content >> 7) & 31;
-			// printf("pc = 0x%.8lx, content: 0x%.8lx, dest register: %x\n", reg.getPC(), content, rdInt);
+			//printf("pc = 0x%.8lx, content: 0x%.8lx, dest register: %x\n", reg.getPC(), content, rdInt);
 
 			if(reg.getPC() == pcdebug)
 			{
@@ -2011,7 +2020,7 @@ void decode(ULL startAddr) {
 				isdebug = false;
 				cout << "> ";
 				scanf("%lx", &memdebug);
-				printf("0x%lx\n", mymem.rwmemReadDword(memdebug));
+				printf("0x%lx\n", mymem->rwmemReadDword(memdebug));
 				goto Debug;
 			}
 			else if(debugbuff == "q")
@@ -2030,7 +2039,7 @@ void decode(ULL startAddr) {
 				cout << "value > ";
 				scanf("%lx", &valdebug);
 				printf("write 0x%lx into 0x%lx\n", valdebug, memdebug);
-				mymem.rwmemWriteDword(valdebug, memdebug);
+				mymem->rwmemWriteDword(valdebug, memdebug);
 				goto Debug;
 			}
 			else
@@ -2042,7 +2051,7 @@ void decode(ULL startAddr) {
 		if(canjump)
 		{
 			canjump = false;
-			printf("jump to address 0x%lx\n", reg.getPC());
+			//printf("jump to address 0x%lx\n", reg.getPC());
 		}
 		else
 		{

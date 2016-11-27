@@ -1,0 +1,14 @@
+-------------------------------------------------------------------------
+SAT 26TH NOV 2016
+TBD
+-- implement the interface with the memory, memory.cc | basically done, still loadRWMem
+-- initialise the cache in loader.cpp | skipped 
+
+NEED TO CHECK
+-- def.h set the coefficients of the cache, especially the cycle
+
+22:16
+changed name of class Memory in the simulator into Memory_SIM, to solve the confliction between it and the memory simulator
+
+01:38
+finished the interface, need to do the test. git commit here

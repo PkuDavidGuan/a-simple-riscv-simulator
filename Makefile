@@ -10,7 +10,7 @@ TESTPATH = testfile
 
 CFLAGS = -g -Wall
 
-OBJS = decode.o loader.o memory.o syscall.o register.o
+OBJS = decode.o loader.o memory_sim.o syscall.o register.o cache.o memory.o
 
 DRYPATH = dryfile
 
@@ -21,22 +21,28 @@ simulator: $(OBJS)
 	$(CC) $(CFLAGS) -o simulator $(OBJS)
 
 loader.o:
-	$(CC) $(CFLAGS) -c loader.cpp
+	$(CC) $(CFLAGS) -g -c loader.cpp
 	
 decode.o:
-	$(CC) $(CFLAGS) -c decode.cpp
+	$(CC) $(CFLAGS) -g -c decode.cpp
 
-memory.o:
-	$(CC) $(CFLAGS) -c memory.cc
+memory_sim.o:
+	$(CC) $(CFLAGS) -g -c memory_sim.cc
 
 register.o:
-	$(CC) $(CFLAGS) -c register.cc
+	$(CC) $(CFLAGS) -g -c register.cc
 
 syscall.o: syscall.h
-	$(CC) $(CFLAGS) -c syscall.cc
+	$(CC) $(CFLAGS) -g -c syscall.cc
+
+cache.o: cachefile/cache.h cachefile/def.h
+	$(CC) -g -c cachefile/cache.cc
+
+memory.o: cachefile/memory.h
+	$(CC) -g -c cachefile/memory.cc
 
 test: 
-	$(RGCC) -g -o test $(TESTPATH)/scanf_test.c
+	$(RGCC) -g -o test $(TESTPATH)/printf_test.c
 	$(OBJDUMP) -S -l -d  test > test.asm
 
 TIME_FUNC =  -DTIMES 

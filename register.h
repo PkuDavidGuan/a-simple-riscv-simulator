@@ -29,6 +29,9 @@ public:
 		pc = 0;
 		x[0] = 0;
 		x[2] = STARTSTACK;
+		#ifdef CACHE
+		x[2] = 0xfffff0;
+		#endif
 	}
 
 	void setPC(int value) { pc = value; }

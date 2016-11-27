@@ -1,0 +1,61 @@
+2016/11/26 19:53
+* If the cache doesn't hit, how to calculate the access_cycle? We assumed that the hit and miss time is equal.
+* We assumed that the access_cycle doesn't contain the time when the lower cache read or wrote. For example, if we use the write-through strategy, we don't contain the time spent in the lower cache.
+* We assumed that the not-allocated strategy doesn't load the lower cache content into the current cache.
+
+21:12
+the idea that hit and miss time is equal can be explained in another way, if we miss in the current cache, we will load the content from the lower cache, after which we can hit successfully in tht current cache. 
+
+11/26 01:30
+Trace test. Now we can succefully run the simulator, but the lru stretegy may not be right.
+
+	if (ReplaceDecision(addr, targetaddr)) 
+    {
+      // Hit!
+      // Something else should be done here
+      printf("%llx hit\n", addr);
+
+      (stats_.access_counter)++; //Only if hit the cache will we add the simtime
+      simtime++;        //and access_counter, otherwise we will calculate twice.      
+      hit = 1;
+      cycle += latency_.hit_latency;
+      stats_.access_cycle += latency_.hit_latency;
+      store[vpn][targetaddr].recent = simtime;
+      if(read == 1)
+      {
+        memcpy(content, store[vpn][targetaddr].c+vpo, bytes);
+      }
+      else if(read == 0)
+      {
+        if(config_.write_through == 0) //write back
+        {
+          store[vpn][targetaddr].dirty = true;
+          memcpy(store[vpn][targetaddr].c+vpo, content, bytes);
+        }
+        else //write through
+        {
+          lower_->HandleRequest(addr, bytes, read, content, hit, cycle);
+        }
+      }
+      else//prefetch
+      {
+        ;
+      }
+      return;
+    }
+    // Choose a victim for the current request.
+    hit = 0;
+    (stats_.miss_num)++;
+    (stats_.replace_num)++;
+
+    if(read == 0 && config_.write_allocate == 0)//write not allocate
+    {
+      (stats_.access_counter)++;
+      simtime++;
+      lower_->HandleRequest(addr, bytes, read, content, hit, cycle);
+    }
+    else
+    {
+      ReplaceAlgorithm(addr, cycle);
+      HandleRequest(addr, bytes, read, content, hit, cycle);
+    }

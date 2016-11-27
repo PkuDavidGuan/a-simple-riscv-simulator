@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "register.h"
-#include "memory.h"
+#include "memory_sim.h"
 
 // destination of some system call function
 #define MALLOCDEST 0x1462c

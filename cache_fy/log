@@ -1,0 +1,4 @@
+2016/11/26 19:53
+* If the cache doesn't hit, how to calculate the access_cycle? We assumed that the hit and miss time is equal.
+* We assumed that the access_cycle doesn't contain the time when the lower cache read or wrote. For example, if we use the write-through strategy, we don't contain the time spent in the lower cache.
+* We assumed that the not-allocated strategy doesn't load the lower cache content into the current cache.

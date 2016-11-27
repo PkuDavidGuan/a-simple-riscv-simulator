@@ -10,14 +10,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <iostream>
-#include "memory.h"
+#include "memory_sim.h"
 #include "elf.h"
 #include "register.h"
 #include "decode.h"
 
 using namespace std;
 
-extern Memory mymem;
+extern Memory_SIM *mymem;
 
 // ---- memory ----
 /*#define MEMSIZE 0x100000
@@ -93,7 +93,7 @@ int loader(char *filename)
 
             assert(ph->p_memsz < MEMSIZE);
            
-            mymem.setRWInitAddr(ph->p_va);
+            mymem->setRWInitAddr(ph->p_va);
 
             total_load += 1;
         }
@@ -120,15 +120,15 @@ int loader(char *filename)
             if(ph->p_flags & PF_X)
             {
                 printf("flag = %x, exec, load to RO_MEM\n\n", (unsigned int)ph->p_flags);
-                mymem.loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
+                mymem->loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
                 uint64_t tmpbrk = ROUNDUP((uint64_t) (ph->p_va) + (uint64_t) (ph->p_filesz), PGSIZE);
                 printf("set heap pointer brk: 0x%lx\n", tmpbrk);
-                mymem.setbrk(tmpbrk);
+                mymem->setbrk(tmpbrk);
             }
             else
             {
                 printf("flag = %x, read write, load to RW_MEM\n\n", (unsigned int)ph->p_flags);
-                mymem.loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
+                mymem->loadRWMem(ph->p_va, (ull)ELFHDR + ph->p_offset, ph->p_filesz);
             } 
 
             total_load += 1;
@@ -143,11 +143,30 @@ int loader(char *filename)
 int main()
 {
     char filename[20];
-    printf("Let me know the name of the elf file:");
+    printf("Please input the name of the elf file:");
     scanf("%s", filename);
     loader(filename);
+
+#ifdef CACHE
     printf("------------------------------------------------------\n");
-    printf("######successfully loaded, now we are decoding...#####\n");
+    printf("     successfully loaded, now set up cache .... \n");
+    // set up L1
+    // set up L2
+    // set up LLC
+    // set up main memory
+
+    printf("------------------------------------------------------\n");
+    printf("     successfully set up the cache, now decode .... \n");
+#else
+    printf("------------------------------------------------------\n");
+    printf("     successfully loaded , now decode .... \n");
+#endif
+
     decode(_eip);
+
+    #ifdef PRINTCACHE_
+    mymem->PrintConfig();
+    #endif
+    
     return 0;
 }

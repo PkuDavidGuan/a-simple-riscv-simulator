@@ -22,7 +22,7 @@
 
 // Here are some notes about the system calls
 
-extern Memory mymem;
+extern Memory_SIM *mymem;
 extern RegisterFile reg;
 
 void ecall() 
@@ -41,29 +41,43 @@ void ecall()
 	switch(sys_call_num)
     {
     case SYS_write:
-        // printf("system call: sys_write\n");
+        #ifdef DEBUG
+        printf("system call: sys_write\n");
+        #endif
         sys_write(arg0, arg1, arg2, arg3);
         break;
     case SYS_open:
-        // printf("system call: sys_open\n");
+        #ifdef DEBUG
+        printf("system call: sys_open\n");
+        #endif
         break; 
     case SYS_close:
+        #ifdef DEBUG
         sys_close(arg0, arg1, arg2, arg3);
+        #endif
         break;
     case SYS_fstat:
-        // printf("system call: sys_fstat\n");
+        #ifdef DEBUG
+        printf("system call: sys_fstat\n");
+        #endif
         sys_fstat(arg0, arg1, arg2, arg3);
         break;
     case SYS_gettimeofday:
-        // printf("system call: sys_gettimeofday\n");
+        #ifdef DEBUG
+        printf("system call: sys_gettimeofday\n");
+        #endif
         sys_gettimeofday(arg0, arg1, arg2, arg3);
         break;
     case SYS_read:
-        // printf("system call: sys_read\n");
+        #ifdef DEBUG
+        printf("system call: sys_read\n");
+        #endif
         sys_read(arg0, arg1, arg2, arg3);
         break;
     case SYS_brk:
-        // printf("system call: sys_brk\n");
+        #ifdef DEBUG
+        printf("system call: sys_brk\n");
+        #endif
         sys_brk(arg0, arg1, arg2, arg3);
         break;
     // case SYS_gettimeofday:
@@ -71,11 +85,17 @@ void ecall()
     //     sys_gettimeofday();
         // break;
     case SYS_exit:
-        // printf("system call: sys_exit\n");
+        #ifdef DEBUG
+        printf("system call: sys_exit\n");
+        #endif
+        
+        #ifdef PRINTCACHE_
+        mymem->PrintConfig();
+        #endif
         exit(0);
         break;
     default:
-        // printf("unimplemented system call number %lu\n", sys_call_num);
+        printf("unimplemented system call number %lu\n", sys_call_num);
         while(1);
     }
 }
@@ -87,7 +107,7 @@ void ebreak()
 
 void sys_test(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5)
 {
-    uint64_t buf = mymem.riscvva2simva(arg5);
+    uint64_t buf = mymem->riscvva2simva(arg5);
     printf("%s", (char*)buf);
     return;
 }
@@ -98,7 +118,7 @@ void malloc_tkor()
     // get length 
     uint64_t len = reg.getIntRegVal(REGA1);
     printf("length of buffer: 0x%lx\n", len);
-    uint64_t tmpbrk = mymem.sbrk_tkor(len);
+    uint64_t tmpbrk = mymem->sbrk_tkor(len);
     reg.setIntRegVal(tmpbrk, REGA0);
     return;
 }
@@ -115,15 +135,22 @@ void sys_write(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3)
         printf("error! fd != stdout\n");
         while(1);
     }*/
+    #ifdef CACHE
+    unsigned char tmp[1000];
+    int tmphit;
+    int cycle;
+    mymem->ReadBuffer(arg1, (int)arg2, (unsigned char*)tmp);
+    printf("%.*s", (int)arg2, (char*)tmp);
+    #else
     // read a0 - a4
     uint64_t buf = arg1;
     // need a riscv va to simulator va function
-    buf = mymem.riscvva2simva(buf);
+    buf = mymem->riscvva2simva(buf);
     uint64_t len = arg2;
     // printf("length of string: %d, buf addr: 0x%lx\n", (int)len, buf);
     printf("%.*s", (int)len, (char*) buf);
+    #endif
     reg.setIntRegVal(0, REGA0);
-    return;
 }
 
 // ---- read system call ----
@@ -139,7 +166,7 @@ void sys_read(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3)
     size_t readnum;
     // need a riscv va to simulator va function
     readnum = strlen(readbuff);
-    buf = mymem.riscvva2simva(buf);
+    buf = mymem->riscvva2simva(buf);
     memcpy((void *)buf, (void *)readbuff, len);
     reg.setIntRegVal(readnum, REGA0);
     return;
@@ -161,7 +188,7 @@ void sys_fstat(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3)
     uint64_t buf = arg1;
 
     // need a riscv va to simulator va function
-    buf = mymem.riscvva2simva(buf);
+    buf = mymem->riscvva2simva(buf);
     // memset((struct stat *) buf, 0, sizeof(struct stat));
     // int tmpret = fstat((int) fd, (struct stat *) buf);
     reg.setIntRegVal(0, REGA0);
@@ -174,7 +201,7 @@ void sys_brk(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3)
 {
     // set brk to position
     // reg.show();
-    uint64_t tmpbrk = mymem.sbrk(arg0);
+    uint64_t tmpbrk = mymem->sbrk(arg0);
     // set new brk
     reg.setIntRegVal(tmpbrk, REGA0);
     // printf("returning: 0x%lx\n", tmpbrk);   
@@ -193,7 +220,7 @@ void sys_gettimeofday(uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3
     struct timeval tv;
     // printf("buffer addr: 0x%lx, len of structure: %d\n", arg0, sizeof(struct timeval));
     gettimeofday(&tv, NULL);
-    memcpy((char *)mymem.riscvva2simva(arg0), &tv, sizeof(struct timeval));
+    memcpy((char *)mymem->riscvva2simva(arg0), &tv, sizeof(struct timeval));
     reg.setIntRegVal(0, REGA0);
     return;
 }
