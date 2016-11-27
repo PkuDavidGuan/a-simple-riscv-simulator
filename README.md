@@ -1,6 +1,6 @@
 #a-simple-riscv-simulator
 ##代码介绍
-### 基础部分
+###基础部分
 * loader.cc:加载elf文件，把两个LOAD段写入模拟的memory中，设置初始pc值以及栈初始化。最后，程序从main函数运行。
 * memory_sim.h/memory_sim.cc:模拟内存。私有变量有RWMEM、STACK，提供两者的读写（1，2，4，8字节）、loader的加载、brk的各种操作，
 * register.h:模拟寄存器堆。均为64位，均用unsigned long long模拟。提供show函数展示当前寄存器信息
@@ -9,7 +9,8 @@
 * test.asm:测试文件的反汇编
 * log_fy: 调试日志
 * testfile: 测试文件
-### cache部分
+
+###cache部分
 在cachefile/def.h中定义CACHE后，模拟器运行在cache模式下。
 * storage.h： 基类，提供access_counter、miss_num等记录信息以及本级存储hit延时和截至传输延迟。
 * cache.h: cache实现，目前实现了handlerequest和替换策略。
