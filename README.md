@@ -16,6 +16,16 @@
 * cache.h: cache实现，目前实现了handlerequest和替换策略。
 * memory.h： 提供成员_mem_，作为虚拟内存。
 
+####cache的思路：
+* 首先使用replacedecision，该函数判断是否hit，如果hit会返回true，且hit行所在的行号，方便hit之后的操作。如果miss则返回false。
+* Hit的操作：更新simtime（模拟时间戳，为了实现LRU策略，每次Handlerequest加一），更新access_num。
+  * 如果读cache，则正常操作。
+  * 如果写：write through策略，向下写一层。write back策略，设置dirty位。
+* Miss操作：miss num加一。
+  1. 如果是写不分配策略，则直接写下层storage，不用经过下面的操作。注意：miss时只有此情况simtime加一（基于访问一次cache则simtime上升一次）
+  2. 调用replacealgorithm函数，选择某个block，如果被选择的block存在内容而且dirty为true，则首先保存block信息，然后则将新的block换入；其它情况直接将新block换入。注意，如果替换旧页，则replace_num加一。
+  3. 再次调用本等级的handlerequest，此时会hit，而且由于之前的保证，simtime只会加一次。
+
 ##使用简介：
 >     依赖关系：
 首先安装riscv工具链。
